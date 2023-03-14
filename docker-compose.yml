@@ -1,7 +1,7 @@
 version: '3.1'
 services:
   stats-server:
-    build: static-service
+    build: ewm-service
     image: stats
     container_name: explore-with-me-stats
     depends_on:

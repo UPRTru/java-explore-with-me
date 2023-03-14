@@ -71,6 +71,7 @@
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
     "show.migrate.to.gradle.popup": "false",
+    "spring.configuration.checksum": "ba9f0c8d303fdcca4e85a0374612debd",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
@@ -105,7 +106,7 @@
       </method>
     </configuration>
     <configuration name="StaticServiceApp" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
-      <module name="static-service" />
+      <module name="ewm-service" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="ru.practicum.StaticServiceApp" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -138,6 +139,7 @@
       <updated>1678733256674</updated>
       <workItem from="1678733258770" duration="751000" />
       <workItem from="1678776648256" duration="24496000" />
+      <workItem from="1678831546457" duration="308000" />
     </task>
     <task id="LOCAL-00001" summary="atat_svc">
       <created>1678826407408</created>
@@ -174,7 +176,14 @@
       <option name="project" value="LOCAL" />
       <updated>1678831437166</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="atat_svc">
+      <created>1678831795076</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1678831795076</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
