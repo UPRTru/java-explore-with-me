@@ -17,6 +17,7 @@ public class HitMapper {
                         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
                 .build();
     }
+
     public static Stats hitToStats(Hit hit) {
         return Stats
                 .builder()
