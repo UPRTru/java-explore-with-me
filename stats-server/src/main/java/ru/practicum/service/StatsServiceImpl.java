@@ -5,7 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.HitDto;
 import ru.practicum.dto.HitMapper;
 import ru.practicum.dto.Stats;
-import ru.practicum.repository.StaticRepository;
+import ru.practicum.repository.StatsRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -18,17 +18,17 @@ import static ru.practicum.dto.HitMapper.dtoToHit;
 
 @Service
 @Transactional(readOnly = true)
-public class StaticServiceImpl implements StaticService {
-    private final StaticRepository staticRepository;
+public class StatsServiceImpl implements StatsService {
+    private final StatsRepository statsRepository;
 
-    public StaticServiceImpl(StaticRepository staticRepository) {
-        this.staticRepository = staticRepository;
+    public StatsServiceImpl(StatsRepository statsRepository) {
+        this.statsRepository = statsRepository;
     }
 
     @Transactional
     @Override
     public void saveHit(HitDto hitDto) {
-        staticRepository.save(dtoToHit(hitDto));
+        statsRepository.save(dtoToHit(hitDto));
     }
 
     @Transactional(readOnly = true)
@@ -38,12 +38,12 @@ public class StaticServiceImpl implements StaticService {
         LocalDateTime endDate = LocalDateTime.parse(end, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         List<Stats> statsHits;
         if (Boolean.TRUE.equals(uniq)) {
-            statsHits = staticRepository.findDistinct(startDate, endDate)
+            statsHits = statsRepository.findDistinct(startDate, endDate)
                     .stream()
                     .peek(stats -> stats.setHits(Long.valueOf(countStatsByUri(stats.getUri()))))
                     .collect(Collectors.toList());
         } else {
-            statsHits = staticRepository.findAllByTimestampBetween(startDate, endDate)
+            statsHits = statsRepository.findAllByTimestampBetween(startDate, endDate)
                     .stream()
                     .map(HitMapper::hitToStats)
                     .peek(stats -> stats.setHits(Long.valueOf(countStatsByUri(stats.getUri()))))
@@ -59,7 +59,7 @@ public class StaticServiceImpl implements StaticService {
     }
 
     private Integer countStatsByUri(String uri) {
-        return staticRepository.countByUri(uri);
+        return statsRepository.countByUri(uri);
     }
 
     private Stats filterByUris(Stats stats, List<String> uris) {
