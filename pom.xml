@@ -12,7 +12,7 @@
 
 	<name>Explore With Me</name>
     <modules>
-        <module>static-service</module>
+        <module>ewm-service</module>
         <module>event-service</module>
     </modules>
 
