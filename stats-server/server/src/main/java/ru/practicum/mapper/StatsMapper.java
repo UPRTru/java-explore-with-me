@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 public class StatsMapper {
-    public static StatsDto statsToStatsDto(Stats stats){
+    public static StatsDto statsToStatsDto(Stats stats) {
         return StatsDto.builder()
                 .app(stats.getApp())
                 .uri(stats.getUri())
@@ -15,7 +15,7 @@ public class StatsMapper {
                 .build();
     }
 
-    public static Collection<StatsDto> statsToStatsDtoCollection(Collection<Stats> statsCollection){
+    public static Collection<StatsDto> statsToStatsDtoCollection(Collection<Stats> statsCollection) {
         return statsCollection.stream().map(StatsMapper::statsToStatsDto).collect(Collectors.toList());
     }
 }

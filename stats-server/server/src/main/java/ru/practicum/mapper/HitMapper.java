@@ -14,7 +14,7 @@ public class HitMapper {
                 .build();
     }
 
-    public static HitDto hitToDto(Hit hit){
+    public static HitDto hitToDto(Hit hit) {
         return HitDto.builder()
                 .id(hit.getId())
                 .app(hit.getApp())
