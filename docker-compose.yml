@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   stats-server:
-    build: stats-server
+    build: stats-server/server
     image: stats
     container_name: explore-with-me-stats
     depends_on:
