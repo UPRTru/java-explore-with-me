@@ -90,7 +90,6 @@
         </profile>
         <profile>
             <id>without-test</id>
-
         </profile>
     </profiles>
 
