@@ -30,10 +30,10 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @Override
     public Collection<UserDto> getUsers(List<Long> listId, Pageable pageable) {
-        if (listId.isEmpty()) {
-            return userToDtoCollection(userRepository.findAll(pageable));
+        if (listId == null) {
+            return userToDtoCollection(userRepository.findAll(pageable).toList());
         }
-        return userToDtoCollection(userRepository.findAllByIdIn(listId, pageable));
+        return userToDtoCollection(userRepository.findAllByIdIn(listId, pageable).toList());
     }
 
     @Transactional

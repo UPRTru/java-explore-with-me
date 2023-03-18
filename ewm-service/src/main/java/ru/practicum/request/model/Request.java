@@ -25,7 +25,7 @@ public class Request {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     @Column
-    LocalDateTime created = LocalDateTime.now();
+    LocalDateTime created;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
     Event event;

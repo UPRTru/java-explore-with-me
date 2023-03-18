@@ -14,6 +14,7 @@ import ru.practicum.request.status.RequestStatus;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 
 import static ru.practicum.request.maper.RequestMapper.requestToDto;
@@ -44,6 +45,7 @@ public class RequestServiceImp implements RequestService {
             Request createRequest = new Request();
             createRequest.setEvent(event);
             createRequest.setRequester(requester);
+            createRequest.setCreated(LocalDateTime.now());
             if (!event.getRequestModeration()) {
                 createRequest.setStatus(RequestStatus.CONFIRMED);
                 event.setConfirmedRequests(event.getConfirmedRequests() + 1);

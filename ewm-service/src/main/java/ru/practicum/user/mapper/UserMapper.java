@@ -24,7 +24,7 @@ public class UserMapper {
                 .build();
     }
 
-    public static Collection<UserDto> userToDtoCollection(Page<User> userPage) {
+    public static Collection<UserDto> userToDtoCollection(Collection<User> userPage) {
         return userPage.stream().map(UserMapper::userToDto).collect(Collectors.toList());
     }
 }
