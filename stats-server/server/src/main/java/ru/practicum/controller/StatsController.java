@@ -32,6 +32,6 @@ public class StatsController {
     @PostMapping(path = "/hit")
     @ResponseStatus(HttpStatus.CREATED)
     public void createHit(@RequestBody HitDto hitDto) {
-        statsService.saveHit(hitDto);
+        statsService.createHit(hitDto);
     }
 }

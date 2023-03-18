@@ -1,10 +1,12 @@
 package ru.practicum;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import ru.practicum.dto.HitDto;
+import ru.practicum.dto.StatsDto;
 
 import java.io.IOException;
 import java.net.URI;
@@ -12,20 +14,18 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class Client {
-    private final String application;
     private final String statsServiceUri;
     private final ObjectMapper json;
     private final HttpClient httpClient;
 
-    public Client(@Value("ewm-service") String application,
+    public Client(@Value("stat-service") String application,
                        @Value("services.stats-service.uri:http://localhost:9090")
                        String statsServiceUri,
                        ObjectMapper json) {
-        this.application = application;
         this.statsServiceUri = statsServiceUri;
         this.json = json;
         this.httpClient = HttpClient.newBuilder()
@@ -33,46 +33,43 @@ public class Client {
                 .build();
     }
 
-    public void saveHit() {
-        HitDto hit = new HitDto(10L, application, statsServiceUri, null, LocalDateTime.now());
-
+    public void saveHit(String uri, HitDto hit) {
         try {
             HttpRequest.BodyPublisher bodyPublisher = HttpRequest
                     .BodyPublishers
                     .ofString(json.writeValueAsString(hit));
             HttpRequest hitRequest = HttpRequest.newBuilder()
-                    .uri(URI.create(statsServiceUri + "/hit"))
+                    .uri(URI.create(statsServiceUri + uri))
                     .POST(bodyPublisher)
                     .header(HttpHeaders.CONTENT_TYPE, "application/json")
                     .header(HttpHeaders.ACCEPT, "application/json")
                     .build();
-            HttpResponse<Void> response = httpClient.send(hitRequest, HttpResponse.BodyHandlers.discarding());
-
-
+            httpClient.send(hitRequest, HttpResponse.BodyHandlers.discarding());
         } catch (Exception e) {
             System.out.println("Невозможно сохранить hit. " + e);
         }
     }
 
-    public String loadStats() {
-        String value = "";
+    public List<StatsDto> loadStats(String uri) {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(statsServiceUri + "/stat"))
+                .uri(URI.create(statsServiceUri + uri))
+                .GET()
                 .header(HttpHeaders.CONTENT_TYPE, "application/json")
                 .header(HttpHeaders.ACCEPT, "application/json")
-                .GET()
                 .build();
+        List<StatsDto> statsDto = List.of();
         try {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                value = response.body();
+                String value = response.body();
                 System.out.println(value);
+                statsDto = json.readValue(value, new TypeReference<List<StatsDto>>(){});
             } else {
                 System.out.println("Ошибка: " + response.statusCode());
             }
         } catch (IOException | InterruptedException e) {
             System.out.println("Ошибка запроса. " + e);
         }
-        return value;
+        return statsDto;
     }
 }

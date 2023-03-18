@@ -11,7 +11,7 @@ import ru.practicum.repository.StatsRepository;
 import java.util.Collection;
 
 import static ru.practicum.mapper.HitMapper.dtoToHit;
-import static ru.practicum.mapper.StatsMapper.statsToStatsDtoCollection;
+import static ru.practicum.mapper.StatsMapper.statsToDtoCollection;
 
 @Service
 public class StatsServiceImpl implements StatsService {
@@ -23,7 +23,7 @@ public class StatsServiceImpl implements StatsService {
 
     @Transactional
     @Override
-    public void saveHit(HitDto hitDto) {
+    public void createHit(HitDto hitDto) {
         statsRepository.save(dtoToHit(hitDto));
     }
 
@@ -36,6 +36,6 @@ public class StatsServiceImpl implements StatsService {
         } else {
             stats = statsRepository.findStats(request.getUris(), request.getStart(), request.getEnd());
         }
-        return statsToStatsDtoCollection(stats);
+        return statsToDtoCollection(stats);
     }
 }

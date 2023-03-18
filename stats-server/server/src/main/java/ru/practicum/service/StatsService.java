@@ -7,7 +7,7 @@ import ru.practicum.model.StatsRequest;
 import java.util.Collection;
 
 public interface StatsService {
-    void saveHit(HitDto hitDto);
+    void createHit(HitDto hitDto);
 
     Collection<StatsDto> getStats(StatsRequest request);
 }
