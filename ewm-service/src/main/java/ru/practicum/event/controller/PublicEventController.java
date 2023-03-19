@@ -46,6 +46,6 @@ public class PublicEventController {
                         @RequestParam(defaultValue = "0") @Min(0) Integer from,
                         @RequestParam(defaultValue = "10") @Min(1) Integer size, HttpServletRequest servlet) {
         return eventService.getEventsByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable,
-                PageRequest.of(from / size, size, Sort.by(EventSort.getSortField(sort)).ascending()) , servlet);
+                PageRequest.of(from / size, size, Sort.by(EventSort.getSortField(sort)).ascending()), servlet);
     }
 }

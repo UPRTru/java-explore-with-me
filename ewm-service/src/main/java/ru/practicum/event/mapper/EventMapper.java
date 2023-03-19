@@ -81,7 +81,7 @@ public class EventMapper {
     }
 
     public static Event updateEventUserToEvent(UpdateEventRequest updateEventRequest, Event event) {
-        if (updateEventRequest.getAnnotation() != null &&!updateEventRequest.getAnnotation().isEmpty()) {
+        if (updateEventRequest.getAnnotation() != null && !updateEventRequest.getAnnotation().isEmpty()) {
             event.setAnnotation(updateEventRequest.getAnnotation());
         }
         if (updateEventRequest.getDescription() != null && !updateEventRequest.getDescription().isEmpty()) {
