@@ -21,8 +21,8 @@ public class AdminCategoryController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void createCategory(@RequestBody @Valid CategoryDto categoryDto) {
-        categoryService.createCategory(categoryDto);
+    public CategoryDto createCategory(@RequestBody @Valid CategoryDto categoryDto) {
+        return categoryService.createCategory(categoryDto);
     }
 
     @PatchMapping("{categoryId}")
@@ -34,7 +34,8 @@ public class AdminCategoryController {
 
     @DeleteMapping("{categoryId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCategory(@PathVariable @Min(1) Long categoryId) {
+    public String deleteCategory(@PathVariable @Min(1) Long categoryId) {
         categoryService.deleteCategory(categoryId);
+        return "Категория с id: " + categoryId + " юыла удалена.";
     }
 }

@@ -5,7 +5,7 @@ import ru.practicum.request.dto.RequestDto;
 import java.util.Collection;
 
 public interface RequestService {
-    void createRequest(Long userId, Long eventId);
+    RequestDto createRequest(Long userId, Long eventId);
 
     Collection<RequestDto> getUserRequests(Long userId);
 

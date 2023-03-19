@@ -8,7 +8,7 @@ import ru.practicum.compilation.dto.UpdateCompilationRequest;
 import java.util.Collection;
 
 public interface CompilationService {
-    void addCompilation(NewCompilationDto compilationDto);
+    CompilationDto addCompilation(NewCompilationDto compilationDto);
 
     void deleteCompilation(Long compId);
 

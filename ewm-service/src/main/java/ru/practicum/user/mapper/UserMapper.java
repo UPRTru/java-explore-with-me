@@ -1,6 +1,5 @@
 package ru.practicum.user.mapper;
 
-import org.springframework.data.domain.Page;
 import ru.practicum.user.dto.UserDto;
 import ru.practicum.user.model.User;
 

@@ -24,8 +24,8 @@ public class UserControllerAdmin {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void createUser(@RequestBody @Valid UserDto userDto) {
-        userService.createUser(userDto);
+    public UserDto createUser(@RequestBody @Valid UserDto userDto) {
+        return userService.createUser(userDto);
     }
 
     @GetMapping
@@ -38,7 +38,8 @@ public class UserControllerAdmin {
 
     @DeleteMapping("{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@PathVariable @Min(1) Long userId) {
+    public String deleteUser(@PathVariable @Min(1) Long userId) {
         userService.deleteUser(userId);
+        return "Пользователь с id: " + userId + " был удален.";
     }
 }

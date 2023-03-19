@@ -23,14 +23,15 @@ public class AdminCompilationController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void addCompilation(@RequestBody @Valid NewCompilationDto compilation) {
-        compilationService.addCompilation(compilation);
+    public CompilationDto addCompilation(@RequestBody @Valid NewCompilationDto compilation) {
+        return compilationService.addCompilation(compilation);
     }
 
     @DeleteMapping("{compId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCompilation(@PathVariable @Min(1) Long compId) {
+    public String deleteCompilation(@PathVariable @Min(1) Long compId) {
         compilationService.deleteCompilation(compId);
+        return "Компиляция с id: " + compId + " была удалена.";
     }
 
     @PatchMapping("{compId}")

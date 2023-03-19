@@ -21,8 +21,8 @@ public class PrivateControllerRequest {
 
     @PostMapping("{userId}/requests")
     @ResponseStatus(HttpStatus.CREATED)
-    public void createRequest(@PathVariable @Min(1) Long userId, @RequestParam @Min(1) Long eventId) {
-        requestService.createRequest(userId, eventId);
+    public RequestDto createRequest(@PathVariable @Min(1) Long userId, @RequestParam @Min(1) Long eventId) {
+        return requestService.createRequest(userId, eventId);
     }
 
     @GetMapping("{userId}/requests")

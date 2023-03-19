@@ -1,13 +1,11 @@
 package ru.practicum.event.mapper;
 
-import org.springframework.data.domain.Page;
 import ru.practicum.category.mapper.CategoryMapper;
 import ru.practicum.category.model.Category;
 import ru.practicum.event.dto.EventDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.UpdateEventRequest;
-import ru.practicum.event.enums.State;
 import ru.practicum.event.model.Event;
 import ru.practicum.user.mapper.UserMapper;
 import ru.practicum.user.model.User;
@@ -56,7 +54,7 @@ public class EventMapper {
                 .build();
     }
 
-    public static Collection<EventDto> eventsToDtoCollection(Page<Event> events) {
+    public static Collection<EventDto> eventsToDtoCollection(Collection<Event> events) {
         return events.stream().map(EventMapper::eventToDto).collect(Collectors.toList());
     }
 
@@ -78,19 +76,16 @@ public class EventMapper {
         return events.stream().map(EventMapper::eventToShortDto).collect(Collectors.toList());
     }
 
-    public static Collection<EventShortDto> eventsPageToShortDtoCollection(Page<Event> events) {
+    public static Collection<EventShortDto> eventsPageToShortDtoCollection(Collection<Event> events) {
         return events.stream().map(EventMapper::eventToShortDto).collect(Collectors.toList());
     }
 
-    public static Event updateEventUserToEvent(UpdateEventRequest updateEventRequest, Event event, boolean admin) {
-        if (!updateEventRequest.getAnnotation().isEmpty()) {
+    public static Event updateEventUserToEvent(UpdateEventRequest updateEventRequest, Event event) {
+        if (updateEventRequest.getAnnotation() != null &&!updateEventRequest.getAnnotation().isEmpty()) {
             event.setAnnotation(updateEventRequest.getAnnotation());
         }
-        if (!updateEventRequest.getDescription().isEmpty()) {
+        if (updateEventRequest.getDescription() != null && !updateEventRequest.getDescription().isEmpty()) {
             event.setDescription(updateEventRequest.getDescription());
-        }
-        if (!updateEventRequest.getEventDate().isEmpty() && admin) {
-            event.setEventDate(LocalDateTime.parse(updateEventRequest.getEventDate(), formatter));
         }
         if (updateEventRequest.getLocation() != null) {
             event.setLocation(updateEventRequest.getLocation());
@@ -104,10 +99,7 @@ public class EventMapper {
         if (updateEventRequest.getRequestModeration() != null) {
             event.setRequestModeration(updateEventRequest.getRequestModeration());
         }
-        if (!updateEventRequest.getStateAction().isEmpty() && admin) {
-            event.setState(State.valueOf(updateEventRequest.getStateAction()));
-        }
-        if (!updateEventRequest.getTitle().isEmpty()) {
+        if (updateEventRequest.getTitle() != null && !updateEventRequest.getTitle().isEmpty()) {
             event.setTitle(updateEventRequest.getTitle());
         }
         return event;

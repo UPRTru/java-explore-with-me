@@ -26,8 +26,8 @@ public class CategoryServiceImp implements CategoryService {
 
     @Transactional
     @Override
-    public void createCategory(CategoryDto categoryDto) {
-        categoryRepository.save(dtoToCategory(categoryDto));
+    public CategoryDto createCategory(CategoryDto categoryDto) {
+        return categoryToDto(categoryRepository.save(dtoToCategory(categoryDto)));
     }
 
     @Transactional

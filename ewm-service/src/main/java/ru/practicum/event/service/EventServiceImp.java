@@ -7,11 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
+import ru.practicum.dto.StatsDto;
 import ru.practicum.event.dto.EventDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.UpdateEventRequest;
-import ru.practicum.event.enums.EventSort;
 import ru.practicum.event.enums.State;
 import ru.practicum.event.enums.StateAction;
 import ru.practicum.event.model.Event;
@@ -31,9 +31,7 @@ import ru.practicum.user.repository.UserRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import static ru.practicum.event.mapper.EventMapper.*;
 import static ru.practicum.request.maper.RequestMapper.requestsToDtoCollection;
@@ -58,15 +56,14 @@ public class EventServiceImp implements EventService {
 
     @Override
     @Transactional
-    public void addNewEvent(Long userId, NewEventDto newEventDto) {
+    public EventDto addNewEvent(Long userId, NewEventDto newEventDto) {
         User user = checkUser(userId);
         Category category = checkCategory(newEventDto.getCategory());
         if (LocalDateTime.parse(newEventDto.getEventDate(), formatter).isBefore(LocalDateTime.now().minusHours(2))) {
             throw new ConflictException("Нужно указать дату, которая еще не наступила. " + newEventDto.getEventDate());
         } else {
-            Event newEvent = newDtoToEvent(newEventDto, user, category,
-                    LocalDateTime.parse(LocalDateTime.now().format(formatter)));
-            eventRepository.save(newEvent);
+            Event newEvent = newDtoToEvent(newEventDto, user, category, LocalDateTime.now());
+            return eventToDto(eventRepository.save(newEvent));
         }
     }
 
@@ -74,14 +71,15 @@ public class EventServiceImp implements EventService {
     @Transactional(readOnly = true)
     public Collection<EventShortDto> getPrivateUserEvents(Long userId, Pageable pageable) {
         checkUser(userId);
-        return eventsPageToShortDtoCollection(eventRepository.findAllByInitiatorId(userId, pageable));
+        return eventsPageToShortDtoCollection(
+                setViews(eventRepository.findAllByInitiatorId(userId, pageable).toList()));
     }
 
     @Override
     @Transactional(readOnly = true)
     public EventDto getPrivateUserEvent(Long userId, Long eventId) {
         checkUser(userId);
-        return eventToDto(checkEcent(eventId, userId));
+        return eventToDto(setViews(List.of(checkEcent(eventId, userId))).get(0));
     }
 
     @Override
@@ -97,14 +95,17 @@ public class EventServiceImp implements EventService {
                 event.setEventDate(eventTime);
             }
         }
-        if (event.getState().equals(State.PUBLISHED)) {
-            throw new ConflictException("Могут быть изменены только ожидающие или отмененные события");
+        if (event.getState() != null) {
+            if (event.getState().equals(State.PUBLISHED)) {
+                throw new ConflictException("Могут быть изменены только ожидающие или отмененные события");
+            } else {
+                event.setState(StateAction.getState(updateEventUserRequest.getStateAction()));
+            }
         }
         if (updateEventUserRequest.getCategory() != null) {
             event.setCategory(checkCategory(updateEventUserRequest.getCategory()));
         }
-        event.setState(StateAction.getState(updateEventUserRequest.getStateAction()));
-        return eventToDto(eventRepository.save(updateEventUserToEvent(updateEventUserRequest, event, false)));
+        return eventToDto(setViews(List.of(updateEventUserToEvent(updateEventUserRequest, event))).get(0));
     }
 
     @Override
@@ -119,26 +120,34 @@ public class EventServiceImp implements EventService {
         } else {
             page = eventRepository.findAll(pageable);
         }
-        return eventsToDtoCollection(page);
+        return eventsToDtoCollection(setViews(page.toList()));
     }
 
     @Override
     @Transactional
     public EventDto updateEventAdmin(Long eventId, UpdateEventRequest updateEventAdminRequest) {
         LocalDateTime eventTime;
+        Event event = eventRepository.findById(eventId).orElseThrow(
+                () -> new NotFoundException("Событие с id=" + eventId + " не найдено"));
         if (updateEventAdminRequest.getEventDate() != null) {
             eventTime = LocalDateTime.parse(updateEventAdminRequest.getEventDate(), formatter);
             if (eventTime.isBefore(LocalDateTime.now().minusHours(1))) {
                 throw new ConflictException("Нужно указать дату, которая еще не наступила. " + eventTime);
+            } else {
+                event.setEventDate(eventTime);
             }
         }
-        Event event = eventRepository.findById(eventId).orElseThrow(
-                () -> new NotFoundException("Событие с id=" + eventId + " не найдено"));
-        changeEventState(event, updateEventAdminRequest.getStateAction());
+        if (updateEventAdminRequest.getStateAction() != null) {
+            if (event.getState() != null) {
+                changeEventState(event, updateEventAdminRequest.getStateAction());
+            } else {
+                event.setState(StateAction.getState(updateEventAdminRequest.getStateAction()));
+            }
+        }
         if (updateEventAdminRequest.getCategory() != null) {
             event.setCategory(checkCategory(updateEventAdminRequest.getCategory()));
         }
-        return eventToDto(eventRepository.save(updateEventUserToEvent(updateEventAdminRequest, event, true)));
+        return eventToDto(eventRepository.save(updateEventUserToEvent(updateEventAdminRequest, event)));
     }
 
     @Override
@@ -170,20 +179,18 @@ public class EventServiceImp implements EventService {
     @Override
     @Transactional
     public EventDto getEventByIdPublic(Long eventId, HttpServletRequest servlet) {
-        statisticClient.postStats(servlet, "ewm-service");
+        statisticClient.postStats(servlet);
         Event event = eventRepository.findByIdAndState(eventId, State.PUBLISHED)
                 .orElseThrow(() -> new NotFoundException("Событие с id: " + eventId + " не найдено"));
-        event.setViews(statisticClient.getViews("/stats?start={start}&end={end}&uris={uris}&unique={unique}"));
-        return eventToDto(eventRepository.save(event));
+        return eventToDto(eventRepository.save(setViews(List.of(event)).get(0)));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<EventShortDto> getEventsByPublic(String text, List<Long> categories, Boolean paid,
                                                       LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                                      Boolean onlyAvailable, EventSort sort,
-                                                      Pageable pageable, HttpServletRequest servlet) {
-        statisticClient.postStats(servlet, "ewm-server");
+                                                      Boolean onlyAvailable, Pageable pageable, HttpServletRequest servlet) {
+        statisticClient.postStats(servlet);
         BooleanBuilder booleanBuilder = addQuery(null, null, categories, rangeStart, rangeEnd);
         Page<Event> page;
         if (text != null) {
@@ -205,7 +212,7 @@ public class EventServiceImp implements EventService {
         } else {
             page = eventRepository.findAll(pageable);
         }
-        return eventsPageToShortDtoCollection(page);
+        return eventsPageToShortDtoCollection(setViews(page.toList()));
     }
 
     private User checkUser(Long userId) {
@@ -297,5 +304,28 @@ public class EventServiceImp implements EventService {
             booleanBuilder.and(QEvent.event.eventDate.before(rangeEnd));
         }
         return booleanBuilder;
+    }
+
+    private List<Event> setViews(List<Event> events) {
+        Map<String, Event> uriEvents = new HashMap<>();
+        List<Long> eventsId = new ArrayList<>();
+        for (Event event : events) {
+            eventsId.add(event.getId());
+            uriEvents.put("/events/" + event.getId(), event);
+        }
+        Set<Event> resp = new HashSet<>();
+        List<StatsDto> statsDtoList;
+        Map<Long, Integer> confRequests = (requestRepository.getConfirmedRequest(eventsId));
+        statsDtoList = statisticClient.getViews(uriEvents.keySet());
+        for (StatsDto statDto : statsDtoList) {
+            String uri = statDto.getUri();
+            Event event = uriEvents.get(uri);
+            event.setViews(statDto.getHits());
+            Integer confirmedRequest = confRequests.get(event.getId());
+            event.setConfirmedRequests(confirmedRequest == null ? 0 : confirmedRequest);
+            resp.add(event);
+        }
+        eventRepository.saveAll(resp);
+        return new ArrayList<>(resp);
     }
 }

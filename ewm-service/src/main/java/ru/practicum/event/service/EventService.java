@@ -5,7 +5,6 @@ import ru.practicum.event.dto.EventDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.UpdateEventRequest;
-import ru.practicum.event.enums.EventSort;
 import ru.practicum.event.enums.State;
 import ru.practicum.request.dto.EventRequestStatusUpdate;
 import ru.practicum.request.dto.EventRequestStatusUpdateResult;
@@ -17,7 +16,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface EventService {
-    void addNewEvent(Long userId, NewEventDto eventDto);
+    EventDto addNewEvent(Long userId, NewEventDto eventDto);
 
     Collection<EventShortDto> getPrivateUserEvents(Long userId, Pageable pageable);
 
@@ -38,5 +37,5 @@ public interface EventService {
 
     Collection<EventShortDto> getEventsByPublic(String text, List<Long> categories, Boolean paid,
                                                 LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable,
-                                                EventSort sort, Pageable pageable, HttpServletRequest servlet);
+                                                Pageable pageable, HttpServletRequest servlet);
 }

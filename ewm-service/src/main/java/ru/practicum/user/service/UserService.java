@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface UserService {
-    void createUser(UserDto userDto);
+    UserDto createUser(UserDto userDto);
 
     Collection<UserDto> getUsers(List<Long> listId, Pageable pageable);
 

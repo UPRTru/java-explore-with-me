@@ -11,7 +11,7 @@ import javax.persistence.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "users")
+@Table(name = "categories")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Category {
     @Id

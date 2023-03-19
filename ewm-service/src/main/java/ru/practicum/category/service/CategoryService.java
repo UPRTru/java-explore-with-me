@@ -6,7 +6,7 @@ import ru.practicum.category.dto.CategoryDto;
 import java.util.Collection;
 
 public interface CategoryService {
-    void createCategory(CategoryDto categoryDto);
+    CategoryDto createCategory(CategoryDto categoryDto);
 
     CategoryDto updateCategory(Long categoryId, CategoryDto categoryDto);
 

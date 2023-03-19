@@ -29,11 +29,11 @@ public class CompilationServiceImp implements CompilationService {
 
     @Override
     @Transactional
-    public void addCompilation(NewCompilationDto newCompilationDto) {
+    public CompilationDto addCompilation(NewCompilationDto newCompilationDto) {
         Set<Event> findEvents = eventRepository.findAllByIdIn(newCompilationDto.getEvents());
         Compilation compilation = newDtoToCompilation(newCompilationDto);
         compilation.setEvents(findEvents);
-        compilationRepository.save(compilation);
+        return compilationToDto(compilationRepository.save(compilation));
     }
 
     @Override

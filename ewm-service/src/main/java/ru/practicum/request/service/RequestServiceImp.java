@@ -35,7 +35,7 @@ public class RequestServiceImp implements RequestService {
 
     @Override
     @Transactional
-    public void createRequest(Long userId, Long eventId) {
+    public RequestDto createRequest(Long userId, Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие с id: " + eventId + " не найдено"));
         User requester = userRepository.findById(userId)
@@ -53,7 +53,7 @@ public class RequestServiceImp implements RequestService {
             } else {
                 createRequest.setStatus(RequestStatus.PENDING);
             }
-            requestRepository.save(createRequest);
+            return requestToDto(requestRepository.save(createRequest));
         } else {
             throw new ConflictException("Достигнут лимит запросов");
         }

@@ -10,8 +10,7 @@ import ru.practicum.user.repository.UserRepository;
 import java.util.Collection;
 import java.util.List;
 
-import static ru.practicum.user.mapper.UserMapper.dtoToUser;
-import static ru.practicum.user.mapper.UserMapper.userToDtoCollection;
+import static ru.practicum.user.mapper.UserMapper.*;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -23,8 +22,8 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void createUser(UserDto userDto) {
-        userRepository.save(dtoToUser(userDto));
+    public UserDto createUser(UserDto userDto) {
+        return userToDto(userRepository.save(dtoToUser(userDto)));
     }
 
     @Transactional(readOnly = true)

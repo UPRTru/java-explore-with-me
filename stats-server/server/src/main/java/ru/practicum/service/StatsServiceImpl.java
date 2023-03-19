@@ -31,10 +31,14 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public Collection<StatsDto> getStats(StatsRequest request) {
         Collection<Stats> stats;
-        if (Boolean.TRUE.equals(request.getUnique())) {
-            stats = statsRepository.findUnique(request.getUris(), request.getStart(), request.getEnd());
+        if (request.getUris() == null || request.getUris().isEmpty()) {
+            stats = (request.getUnique() ?
+                    statsRepository.getUniqueViewsWithoutUris(request.getStart(), request.getEnd()) :
+                    statsRepository.getAllViewsWithoutUris(request.getStart(), request.getEnd()));
         } else {
-            stats = statsRepository.findStats(request.getUris(), request.getStart(), request.getEnd());
+            stats = request.getUnique() ?
+                    statsRepository.getUniqueViews(request.getStart(), request.getEnd(), request.getUris()) :
+                    statsRepository.getAllViews(request.getStart(), request.getEnd(), request.getUris());
         }
         return statsToDtoCollection(stats);
     }

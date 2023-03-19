@@ -1,6 +1,7 @@
 package ru.practicum.event.controller;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -45,6 +46,6 @@ public class PublicEventController {
                         @RequestParam(defaultValue = "0") @Min(0) Integer from,
                         @RequestParam(defaultValue = "10") @Min(1) Integer size, HttpServletRequest servlet) {
         return eventService.getEventsByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable,
-                EventSort.valueOf(sort), PageRequest.of(from / size, size), servlet);
+                PageRequest.of(from / size, size, Sort.by(EventSort.getSortField(sort)).ascending()) , servlet);
     }
 }

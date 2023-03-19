@@ -8,7 +8,6 @@ import ru.practicum.user.model.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import static ru.practicum.request.status.RequestStatus.PENDING;
 
