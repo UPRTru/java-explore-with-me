@@ -3,7 +3,6 @@ package ru.practicum.request.model;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.event.model.Event;
-import ru.practicum.request.status.RequestStatus;
 import ru.practicum.user.model.User;
 
 import javax.persistence.*;
@@ -14,7 +13,6 @@ import static ru.practicum.request.status.RequestStatus.PENDING;
 @Entity
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -32,5 +30,5 @@ public class Request {
     @JoinColumn(name = "requester_id", nullable = false)
     User requester;
     @Column
-    RequestStatus status = PENDING;
+    String status = PENDING.name();
 }

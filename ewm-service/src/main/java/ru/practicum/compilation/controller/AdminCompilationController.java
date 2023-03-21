@@ -9,7 +9,6 @@ import ru.practicum.compilation.dto.UpdateCompilationRequest;
 import ru.practicum.compilation.service.CompilationService;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 
 @RestController
 @RequestMapping("/admin/compilations")
@@ -29,14 +28,14 @@ public class AdminCompilationController {
 
     @DeleteMapping("{compId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public String deleteCompilation(@PathVariable @Min(1) Long compId) {
+    public String deleteCompilation(@PathVariable Long compId) {
         compilationService.deleteCompilation(compId);
         return "Компиляция с id: " + compId + " была удалена.";
     }
 
     @PatchMapping("{compId}")
     @ResponseStatus(HttpStatus.OK)
-    public CompilationDto updateCompilation(@PathVariable @Min(1) Long compId,
+    public CompilationDto updateCompilation(@PathVariable Long compId,
                                             @RequestBody UpdateCompilationRequest updateCompilation) {
         return compilationService.updateCompilation(compId, updateCompilation);
     }

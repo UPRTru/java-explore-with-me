@@ -10,13 +10,8 @@ import java.util.stream.Collectors;
 
 public class RequestMapper {
     public static RequestDto requestToDto(Request request) {
-        return RequestDto.builder()
-                .id(request.getId())
-                .event(request.getEvent().getId())
-                .requester(request.getRequester().getId())
-                .status(request.getStatus())
-                .created(request.getCreated().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-                .build();
+        return new RequestDto(request.getId(), request.getEvent().getId(), request.getRequester().getId(),
+                request.getStatus(), request.getCreated().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
     }
 
     public static List<RequestDto> requestsSetToDtoList(Set<Request> requests) {

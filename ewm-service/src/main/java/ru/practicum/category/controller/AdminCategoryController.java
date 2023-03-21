@@ -7,7 +7,6 @@ import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.service.CategoryService;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 
 @RestController
 @RequestMapping("/admin/categories")
@@ -27,14 +26,14 @@ public class AdminCategoryController {
 
     @PatchMapping("{categoryId}")
     @ResponseStatus(HttpStatus.OK)
-    public CategoryDto updateCategory(@PathVariable @Min(1) Long categoryId,
+    public CategoryDto updateCategory(@PathVariable Long categoryId,
                                       @RequestBody @Valid CategoryDto updateCategory) {
         return categoryService.updateCategory(categoryId, updateCategory);
     }
 
     @DeleteMapping("{categoryId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public String deleteCategory(@PathVariable @Min(1) Long categoryId) {
+    public String deleteCategory(@PathVariable Long categoryId) {
         categoryService.deleteCategory(categoryId);
         return "Категория с id: " + categoryId + " юыла удалена.";
     }

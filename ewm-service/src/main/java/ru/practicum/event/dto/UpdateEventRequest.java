@@ -1,15 +1,16 @@
 package ru.practicum.event.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.event.location.Location;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -20,7 +21,8 @@ public class UpdateEventRequest {
     Long category;
     @Size(min = 20, max = 4000)
     String description;
-    String eventDate;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime eventDate;
     Location location;
     Boolean paid;
     @Min(0)

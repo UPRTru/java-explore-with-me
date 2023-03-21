@@ -17,7 +17,6 @@ import java.util.List;
 @RequestMapping("/admin/events")
 public class AdminEventController {
     private final EventService eventService;
-    private static final String FORMATTER = "yyyy-MM-dd HH:mm:ss";
 
     public AdminEventController(EventService eventService) {
         this.eventService = eventService;
@@ -29,8 +28,8 @@ public class AdminEventController {
             @RequestParam(required = false) List<Long> users,
             @RequestParam(required = false) List<String> states,
             @RequestParam(required = false) List<Long> categories,
-            @RequestParam(required = false) @DateTimeFormat(pattern = FORMATTER) LocalDateTime rangeStart,
-            @RequestParam(required = false) @DateTimeFormat(pattern = FORMATTER) LocalDateTime rangeEnd,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
             @RequestParam(defaultValue = "0") @Min(0) Integer from,
             @RequestParam(defaultValue = "10") @Min(1) Integer size) {
         return eventService.getEventsByAdmin(users, states, categories, rangeStart, rangeEnd,
@@ -39,7 +38,7 @@ public class AdminEventController {
 
     @PatchMapping("{eventId}")
     @ResponseStatus(HttpStatus.OK)
-    public EventDto updateEventAdmin(@PathVariable @Min(1) Long eventId, @RequestBody UpdateEventRequest updateEvent) {
+    public EventDto updateEventAdmin(@PathVariable Long eventId, @RequestBody UpdateEventRequest updateEvent) {
         return eventService.updateEventAdmin(eventId, updateEvent);
     }
 }

@@ -26,7 +26,7 @@ public class PrivateEventController {
 
     @PostMapping("{userId}/events")
     @ResponseStatus(HttpStatus.CREATED)
-    public EventRequestDto addEventDto(@PathVariable @Min(1) Long userId, @RequestBody @Valid NewEventDto eventDto) {
+    public EventRequestDto addEventDto(@PathVariable Long userId, @RequestBody @Valid NewEventDto eventDto) {
         return eventService.addNewEvent(userId, eventDto);
     }
 
@@ -34,35 +34,35 @@ public class PrivateEventController {
     @ResponseStatus(HttpStatus.OK)
     public Collection<EventShortDto> getUserEvents(@RequestParam(defaultValue = "0") @Min(0) Integer from,
                                                    @RequestParam(defaultValue = "10") @Min(1) Integer size,
-                                                   @PathVariable @Min(1) Long userId) {
+                                                   @PathVariable Long userId) {
         return eventService.getPrivateUserEvents(userId, PageRequest.of(from / size, size));
     }
 
     @GetMapping("{userId}/events/{eventId}")
     @ResponseStatus(HttpStatus.OK)
-    public EventDto getUserEvent(@PathVariable @Min(1) Long userId, @PathVariable @Min(1) Long eventId) {
+    public EventDto getUserEvent(@PathVariable Long userId, @PathVariable Long eventId) {
         return eventService.getPrivateUserEvent(userId, eventId);
     }
 
     @PatchMapping("{userId}/events/{eventId}")
     @ResponseStatus(HttpStatus.OK)
-    public EventDto updateEvent(@PathVariable @Min(1) Long userId,
-                                @PathVariable @Min(1) Long eventId,
+    public EventDto updateEvent(@PathVariable Long userId,
+                                @PathVariable Long eventId,
                                 @RequestBody @Valid UpdateEventRequest updateEvent) {
         return eventService.updateEventUser(userId, eventId, updateEvent);
     }
 
     @GetMapping("{userId}/events/{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
-    public Collection<RequestDto> getUserEventRequests(@PathVariable @Min(1) Long userId,
-                                                       @PathVariable @Min(1) Long eventId) {
+    public Collection<RequestDto> getUserEventRequests(@PathVariable Long userId,
+                                                       @PathVariable Long eventId) {
         return eventService.getUserEventRequests(userId, eventId);
     }
 
     @PatchMapping("{userId}/events/{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
-    public EventRequestStatusUpdateResult approveRequests(@PathVariable @Min(1) Long userId,
-                                                          @PathVariable @Min(1) Long eventId,
+    public EventRequestStatusUpdateResult approveRequests(@PathVariable Long userId,
+                                                          @PathVariable Long eventId,
                                                           @RequestBody EventRequestStatusUpdate requests) {
         return eventService.approveRequests(userId, eventId, requests);
     }

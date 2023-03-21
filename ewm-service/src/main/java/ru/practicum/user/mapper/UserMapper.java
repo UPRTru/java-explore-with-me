@@ -8,19 +8,11 @@ import java.util.stream.Collectors;
 
 public class UserMapper {
     public static User dtoToUser(UserDto userDto) {
-        return User.builder()
-                .id(userDto.getId())
-                .name(userDto.getName())
-                .email(userDto.getEmail())
-                .build();
+        return new User(userDto.getId(), userDto.getName(), userDto.getEmail());
     }
 
     public static UserDto userToDto(User user) {
-        return UserDto.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .build();
+        return new UserDto(user.getId(), user.getName(), user.getEmail());
     }
 
     public static Collection<UserDto> userToDtoCollection(Collection<User> userPage) {

@@ -15,7 +15,6 @@ import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static ru.practicum.request.maper.RequestMapper.requestToDto;
@@ -46,19 +45,13 @@ public class RequestServiceImp implements RequestService {
         }
         validateCreatingRequest(event, userId);
         if (event.getParticipantLimit() == 0 || event.getParticipantLimit() > event.getConfirmedRequests()) {
-            Request createRequest = Request.builder()
-                    .event(event)
-                    .requester(requester)
-                    .created(LocalDateTime.parse(LocalDateTime.now()
-                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-                    .build();
+            Request createRequest = new Request(null, LocalDateTime.now(), event, requester, null);
             if (!event.getRequestModeration()) {
-                createRequest.setStatus(RequestStatus.CONFIRMED);
+                createRequest.setStatus(RequestStatus.CONFIRMED.name());
                 event.setConfirmedRequests(event.getConfirmedRequests() + 1);
                 eventRepository.save(event);
             } else {
-                createRequest.setStatus(RequestStatus.PENDING);
+                createRequest.setStatus(RequestStatus.PENDING.name());
             }
             return requestToDto(requestRepository.save(createRequest));
         } else {
@@ -82,12 +75,12 @@ public class RequestServiceImp implements RequestService {
         Request request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Запрос с id: " + requestId + " не найден"));
         Event event = request.getEvent();
-        if (request.getStatus().equals(RequestStatus.CONFIRMED)) {
+        if (request.getStatus().equals(RequestStatus.CONFIRMED.name())) {
             event.setConfirmedRequests(event.getConfirmedRequests() - 1);
-            request.setStatus(RequestStatus.CANCELED);
+            request.setStatus(RequestStatus.CANCELED.name());
             eventRepository.save(event);
         } else {
-            request.setStatus(RequestStatus.CANCELED);
+            request.setStatus(RequestStatus.CANCELED.name());
         }
         return requestToDto(requestRepository.save(request));
     }

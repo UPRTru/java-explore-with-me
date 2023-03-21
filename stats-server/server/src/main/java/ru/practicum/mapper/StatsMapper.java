@@ -8,11 +8,7 @@ import java.util.stream.Collectors;
 
 public class StatsMapper {
     public static StatsDto statsToStatsDto(Stats stats) {
-        return StatsDto.builder()
-                .app(stats.getApp())
-                .uri(stats.getUri())
-                .hits(Math.toIntExact(stats.getHits()))
-                .build();
+        return new StatsDto(stats.getApp(), stats.getUri(), Math.toIntExact(stats.getHits()));
     }
 
     public static List<StatsDto> statsToStatsDtoCollection(List<Stats> statsCollection) {

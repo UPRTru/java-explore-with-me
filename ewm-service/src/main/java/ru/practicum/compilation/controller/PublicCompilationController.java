@@ -22,7 +22,7 @@ public class PublicCompilationController {
 
     @GetMapping("{compId}")
     @ResponseStatus(HttpStatus.OK)
-    public CompilationDto getCompilation(@PathVariable @Min(1) Long compId) {
+    public CompilationDto getCompilation(@PathVariable Long compId) {
         return compilationService.getCompilation(compId);
     }
 

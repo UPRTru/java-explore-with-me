@@ -9,17 +9,11 @@ import java.util.stream.Collectors;
 
 public class CategoryMapper {
     public static Category dtoToCategory(CategoryDto categoryDto) {
-        return Category.builder()
-                .id(categoryDto.getId())
-                .name(categoryDto.getName())
-                .build();
+        return new Category(categoryDto.getId(), categoryDto.getName());
     }
 
     public static CategoryDto categoryToDto(Category category) {
-        return CategoryDto.builder()
-                .id(category.getId())
-                .name(category.getName())
-                .build();
+        return new CategoryDto(category.getId(), category.getName());
     }
 
     public static Collection<CategoryDto> categoryToDtoCollection(Page<Category> categoryPage) {

@@ -16,7 +16,6 @@ import java.util.Set;
 @Entity
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "events")
@@ -61,5 +60,4 @@ public class Event {
     Set<Request> requests;
     @ManyToMany(mappedBy = "events", fetch = FetchType.LAZY)
     Set<Compilation> compilations;
-
 }

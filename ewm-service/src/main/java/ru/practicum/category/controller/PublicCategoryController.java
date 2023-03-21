@@ -29,7 +29,7 @@ public class PublicCategoryController {
 
     @GetMapping("{categoryId}")
     @ResponseStatus(HttpStatus.OK)
-    public CategoryDto getCategoryById(@PathVariable @Min(1) Long categoryId) {
+    public CategoryDto getCategoryById(@PathVariable Long categoryId) {
         return categoryService.getCategoryById(categoryId);
     }
 }

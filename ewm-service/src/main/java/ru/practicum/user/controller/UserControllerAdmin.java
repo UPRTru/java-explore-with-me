@@ -32,14 +32,13 @@ public class UserControllerAdmin {
     @ResponseStatus(HttpStatus.OK)
     public Collection<UserDto> getUsers(@RequestParam(required = false) List<Long> listId,
                                         @RequestParam(defaultValue = "0") @Min(0) Integer from,
-                                        @RequestParam(defaultValue = "1") @Min(1) Integer size) {
+                                        @RequestParam(defaultValue = "10") @Min(1) Integer size) {
         return userService.getUsers(listId, PageRequest.of(from / size, size));
     }
 
     @DeleteMapping("{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public String deleteUser(@PathVariable @Min(1) Long userId) {
+    public void deleteUser(@PathVariable Long userId) {
         userService.deleteUser(userId);
-        return "Пользователь с id: " + userId + " был удален.";
     }
 }

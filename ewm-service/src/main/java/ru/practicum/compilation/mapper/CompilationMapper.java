@@ -13,19 +13,13 @@ import java.util.stream.Collectors;
 
 public class CompilationMapper {
     public static CompilationDto compilationToDto(Compilation compilation) {
-        return CompilationDto.builder()
-                .id(compilation.getId())
-                .events((List<EventShortDto>) EventMapper.eventsToShortDtoCollection(compilation.getEvents()))
-                .pinned(compilation.getPinned())
-                .title(compilation.getTitle())
-                .build();
+        return new CompilationDto(compilation.getId(),
+                (List<EventShortDto>) EventMapper.eventsToShortDtoCollection(compilation.getEvents()),
+                compilation.getPinned(), compilation.getTitle());
     }
 
     public static Compilation newDtoToCompilation(NewCompilationDto newCompilationDto) {
-        return Compilation.builder()
-                .pinned(newCompilationDto.getPinned())
-                .title(newCompilationDto.getTitle())
-                .build();
+        return new Compilation(null, null, newCompilationDto.getPinned(), newCompilationDto.getTitle());
     }
 
     public static Collection<CompilationDto> compilationsToDtoCollections(Page<Compilation> compilations) {

@@ -88,11 +88,11 @@ public class EventServiceImp implements EventService {
         checkUser(userId);
         Event event = checkEcent(eventId, userId);
         if (updateEventUserRequest.getEventDate() != null) {
-            LocalDateTime eventTime = LocalDateTime.parse(updateEventUserRequest.getEventDate(), formatter);
-            if (eventTime.isBefore(LocalDateTime.now().minusHours(2))) {
-                throw new ConflictException("Нужно указать дату, которая еще не наступила. " + eventTime);
+            if (updateEventUserRequest.getEventDate().isBefore(LocalDateTime.now().minusHours(2))) {
+                throw new ConflictException("Нужно указать дату, которая еще не наступила. "
+                        + updateEventUserRequest.getEventDate());
             } else {
-                event.setEventDate(eventTime);
+                event.setEventDate(updateEventUserRequest.getEventDate());
             }
         }
         if (event.getState() != null) {
@@ -126,15 +126,14 @@ public class EventServiceImp implements EventService {
     @Override
     @Transactional
     public EventDto updateEventAdmin(Long eventId, UpdateEventRequest updateEventAdminRequest) {
-        LocalDateTime eventTime;
         Event event = eventRepository.findById(eventId).orElseThrow(
                 () -> new NotFoundException("Событие с id=" + eventId + " не найдено"));
         if (updateEventAdminRequest.getEventDate() != null) {
-            eventTime = LocalDateTime.parse(updateEventAdminRequest.getEventDate(), formatter);
-            if (eventTime.isBefore(LocalDateTime.now().minusHours(1))) {
-                throw new ConflictException("Нужно указать дату, которая еще не наступила. " + eventTime);
+            if (updateEventAdminRequest.getEventDate().isBefore(LocalDateTime.now().minusHours(1))) {
+                throw new ConflictException("Нужно указать дату, которая еще не наступила. "
+                        + updateEventAdminRequest.getEventDate());
             } else {
-                event.setEventDate(eventTime);
+                event.setEventDate(updateEventAdminRequest.getEventDate());
             }
         }
         if (updateEventAdminRequest.getStateAction() != null) {
@@ -169,11 +168,7 @@ public class EventServiceImp implements EventService {
         List<RequestDto> confirmedRequests = new ArrayList<>();
         List<RequestDto> rejectedRequests = new ArrayList<>();
         moderationRequests(confirmedRequests, rejectedRequests, event, requests);
-        return EventRequestStatusUpdateResult
-                .builder()
-                .confirmedRequests(confirmedRequests)
-                .rejectedRequests(rejectedRequests)
-                .build();
+        return new EventRequestStatusUpdateResult(confirmedRequests, rejectedRequests);
     }
 
     @Override
@@ -237,30 +232,30 @@ public class EventServiceImp implements EventService {
                                     List<RequestDto> rejectedRequests,
                                     Event event, EventRequestStatusUpdate requests) {
         requestRepository.findAllByIdIn(requests.getRequestIds()).stream().peek(r -> {
-            if (r.getStatus().equals(RequestStatus.PENDING)) {
+            if (r.getStatus().equals(RequestStatus.PENDING.name())) {
                 if (event.getParticipantLimit() == 0) {
-                    r.setStatus(RequestStatus.CONFIRMED);
+                    r.setStatus(RequestStatus.CONFIRMED.name());
                     event.setConfirmedRequests(event.getConfirmedRequests() + 1);
                 } else if (event.getParticipantLimit() > event.getConfirmedRequests()) {
                     if (!event.getRequestModeration()) {
-                        r.setStatus(RequestStatus.CONFIRMED);
+                        r.setStatus(RequestStatus.CONFIRMED.name());
                         event.setConfirmedRequests(event.getConfirmedRequests() + 1);
                     } else {
-                        if (requests.getStatus().equals(RequestStatus.CONFIRMED.toString())) {
-                            r.setStatus(RequestStatus.CONFIRMED);
+                        if (requests.getStatus().equals(RequestStatus.CONFIRMED.name())) {
+                            r.setStatus(RequestStatus.CONFIRMED.name());
                             event.setConfirmedRequests(event.getConfirmedRequests() + 1);
                         } else {
-                            r.setStatus(RequestStatus.REJECTED);
+                            r.setStatus(RequestStatus.REJECTED.name());
                         }
                     }
                 } else {
-                    r.setStatus(RequestStatus.REJECTED);
+                    r.setStatus(RequestStatus.REJECTED.name());
                 }
             } else {
                 throw new ConflictException("Может только подтверждать PENDING запросы.");
             }
         }).map(RequestMapper::requestToDto).forEach(r -> {
-            if (r.getStatus().equals(RequestStatus.CONFIRMED)) {
+            if (r.getStatus().equals(RequestStatus.CONFIRMED.name())) {
                 confirmedRequests.add(r);
             } else {
                 rejectedRequests.add(r);

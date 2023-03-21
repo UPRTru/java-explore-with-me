@@ -13,14 +13,12 @@ import ru.practicum.dto.StatsDto;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 @Service
 public class StatisticClient extends Client {
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final String url;
 
     public StatisticClient(@Value("${stats-server.url}") String serverUrl, RestTemplateBuilder builder) {
@@ -34,7 +32,7 @@ public class StatisticClient extends Client {
 
     public void postStats(HttpServletRequest servlet) {
         post(new HitDto("ewm-service", servlet.getRequestURI(),
-                servlet.getRemoteAddr(), LocalDateTime.parse(LocalDateTime.now().format(formatter), formatter)));
+                servlet.getRemoteAddr(), LocalDateTime.now()));
     }
 
     public List<StatsDto> getViews(Set<String> ids) {
