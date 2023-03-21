@@ -59,10 +59,10 @@ public class EventServiceImp implements EventService {
             throw new ConflictException("Дата события должна быть в будущем.");
         }
         Category category = checkCategory(newEventDto.getCategory());
-        if (newEventDto.getEventDate().isBefore(LocalDateTime.now().minusHours(2))) {
-            throw new ConflictException("Нужно указать дату, которая еще не наступила. " + newEventDto.getEventDate());
+        Event newEvent = newDtoToEvent(newEventDto, user, category, LocalDateTime.now());
+        if (newEvent.getEventDate().isBefore(LocalDateTime.now().minusHours(2))) {
+            throw new ConflictException("Нужно указать дату, которая еще не наступила. " + newEvent.getEventDate());
         } else {
-            Event newEvent = newDtoToEvent(newEventDto, user, category, LocalDateTime.now());
             return adminToEventRequestDto(eventRepository.save(newEvent));
         }
     }

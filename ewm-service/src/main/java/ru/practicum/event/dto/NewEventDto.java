@@ -26,17 +26,17 @@ public class NewEventDto {
     @Size(min = 1, max = 4000)
     String description;
     @NotNull
-    Location location;
-    @NotNull
-    Boolean paid;
-    @NotBlank
-    @Size(max = 120)
-    String title;
-    @PositiveOrZero
-    Integer participantLimit;
-    @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime eventDate;
     @NotNull
+    Location location;
+    @NotNull
+    Boolean paid;
+    @PositiveOrZero
+    Integer participantLimit;
+    @NotNull
     Boolean requestModeration;
+    @NotBlank
+    @Size(max = 120)
+    String title;
 }
