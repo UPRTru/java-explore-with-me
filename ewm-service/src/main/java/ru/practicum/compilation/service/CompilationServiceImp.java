@@ -53,7 +53,8 @@ public class CompilationServiceImp implements CompilationService {
         if (updateCompilation.getPinned() != null && !updateCompilation.getPinned().equals(compilation.getPinned())) {
             compilation.setPinned(updateCompilation.getPinned());
         }
-        if (!updateCompilation.getTitle().isEmpty() && !updateCompilation.getTitle().equals(compilation.getTitle())) {
+        if (updateCompilation.getTitle() != null && !updateCompilation.getTitle().isEmpty()
+                && !updateCompilation.getTitle().equals(compilation.getTitle())) {
             compilation.setTitle(updateCompilation.getTitle());
         }
         compilation.setEvents(findEvents);

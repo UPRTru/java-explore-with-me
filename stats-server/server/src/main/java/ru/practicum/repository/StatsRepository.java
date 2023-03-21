@@ -11,23 +11,15 @@ import java.util.List;
 
 @Repository
 public interface StatsRepository extends JpaRepository<Hit, Long> {
-    @Query(value = "SELECT new ru.practicum.model.Stats (h.app, h.ip, h.uri, count(distinct h.ip))  " +
-            "FROM Hit AS h WHERE h.timestamp > ?1 AND h.timestamp <?2 GROUP BY h.app, h.uri ,h.ip " +
-            "ORDER BY count (h.app) DESC")
-    List<Stats> getUniqueViewsWithoutUris(LocalDateTime start, LocalDateTime end);
+    @Query(name = "findAllViews", nativeQuery = true)
+    List<Stats> findAllViews(List<String> uris, LocalDateTime start, LocalDateTime end);
 
-    @Query(value = "SELECT new ru.practicum.model.Stats (h.app, h.ip, h.uri, count(distinct h.ip))  " +
-            "FROM Hit AS h WHERE h.timestamp > ?1 AND h.timestamp <?2 AND h.uri IN ?3 GROUP BY h.app, h.uri ,h.ip " +
-            "ORDER BY count (h.uri) DESC")
-    List<Stats> getUniqueViews(LocalDateTime start, LocalDateTime end, List<String> uris);
+    @Query(name = "findUniqueViews", nativeQuery = true)
+    List<Stats> findUniqueViews(List<String> uris, LocalDateTime start, LocalDateTime end);
 
-    @Query(value = "SELECT new ru.practicum.model.Stats (h.app,h.ip, h.uri, count(h.app)) " +
-            "FROM Hit AS h where h.timestamp > ?1 AND h.timestamp <?2  GROUP BY h.app, h.uri,h.ip " +
-            "ORDER BY count (h.app) DESC")
-    List<Stats> getAllViewsWithoutUris(LocalDateTime start, LocalDateTime end);
+    @Query(name = "findAllViewsWithoutUris", nativeQuery = true)
+    List<Stats> findAllViewsWithoutUris(LocalDateTime start, LocalDateTime end);
 
-    @Query(value = "SELECT new ru.practicum.model.Stats (h.app, h.ip, h.uri, count(distinct h.ip))  " +
-            "FROM Hit AS h WHERE h.timestamp > ?1 AND h.timestamp <?2 AND h.uri IN ?3 GROUP BY h.app, h.uri ,h.ip " +
-            "ORDER BY count (h.uri) DESC")
-    List<Stats> getAllViews(LocalDateTime start, LocalDateTime end, List<String> uris);
+    @Query(name = "findUniqueViewsWithoutUris", nativeQuery = true)
+    List<Stats> findUniqueViewsWithoutUris(LocalDateTime start, LocalDateTime end);
 }

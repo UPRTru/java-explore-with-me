@@ -15,10 +15,11 @@ import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import static ru.practicum.request.maper.RequestMapper.requestToDto;
-import static ru.practicum.request.maper.RequestMapper.requestsToDtoCollection;
+import static ru.practicum.request.maper.RequestMapper.requestsListToDtoList;
 
 @Service
 public class RequestServiceImp implements RequestService {
@@ -40,12 +41,18 @@ public class RequestServiceImp implements RequestService {
                 .orElseThrow(() -> new NotFoundException("Событие с id: " + eventId + " не найдено"));
         User requester = userRepository.findById(userId)
                         .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
+        if (!requestRepository.findAllByRequesterIdAndEventId(userId, eventId).isEmpty()) {
+            throw new ConflictException("Request уже существует.");
+        }
         validateCreatingRequest(event, userId);
         if (event.getParticipantLimit() == 0 || event.getParticipantLimit() > event.getConfirmedRequests()) {
-            Request createRequest = new Request();
-            createRequest.setEvent(event);
-            createRequest.setRequester(requester);
-            createRequest.setCreated(LocalDateTime.now());
+            Request createRequest = Request.builder()
+                    .event(event)
+                    .requester(requester)
+                    .created(LocalDateTime.parse(LocalDateTime.now()
+                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                    .build();
             if (!event.getRequestModeration()) {
                 createRequest.setStatus(RequestStatus.CONFIRMED);
                 event.setConfirmedRequests(event.getConfirmedRequests() + 1);
@@ -55,16 +62,16 @@ public class RequestServiceImp implements RequestService {
             }
             return requestToDto(requestRepository.save(createRequest));
         } else {
-            throw new ConflictException("Достигнут лимит запросов");
+            throw new ConflictException("Достигнут лимит запросов.");
         }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<RequestDto> getUserRequests(Long userId) {
+    public List<RequestDto> getUserRequests(Long userId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
-        return requestsToDtoCollection(requestRepository.findAllByRequesterId(userId));
+        return requestsListToDtoList(requestRepository.findAllByRequesterId(userId));
     }
 
     @Override
@@ -89,7 +96,7 @@ public class RequestServiceImp implements RequestService {
         if (event.getInitiator().getId().equals(userId)) {
             throw new ConflictException("Вы не можете создать запрос на участие в вашем собственном мероприятии");
         }
-        if (event.getState() != State.PUBLISHED) {
+        if (!event.getState().equals(State.PUBLISHED.name())) {
             throw new ConflictException("Вы не можете участвовать в неопубликованном мероприятии");
         }
     }

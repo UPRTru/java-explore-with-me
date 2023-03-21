@@ -8,10 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
 import ru.practicum.dto.StatsDto;
-import ru.practicum.event.dto.EventDto;
-import ru.practicum.event.dto.EventShortDto;
-import ru.practicum.event.dto.NewEventDto;
-import ru.practicum.event.dto.UpdateEventRequest;
+import ru.practicum.event.dto.*;
 import ru.practicum.event.enums.State;
 import ru.practicum.event.enums.StateAction;
 import ru.practicum.event.model.Event;
@@ -34,7 +31,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static ru.practicum.event.mapper.EventMapper.*;
-import static ru.practicum.request.maper.RequestMapper.requestsToDtoCollection;
+import static ru.practicum.request.maper.RequestMapper.requestsSetToDtoList;
 
 @Service
 public class EventServiceImp implements EventService {
@@ -56,14 +53,17 @@ public class EventServiceImp implements EventService {
 
     @Override
     @Transactional
-    public EventDto addNewEvent(Long userId, NewEventDto newEventDto) {
+    public EventRequestDto addNewEvent(Long userId, NewEventDto newEventDto) {
         User user = checkUser(userId);
+        if (newEventDto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new ConflictException("Дата события должна быть в будущем.");
+        }
         Category category = checkCategory(newEventDto.getCategory());
-        if (LocalDateTime.parse(newEventDto.getEventDate(), formatter).isBefore(LocalDateTime.now().minusHours(2))) {
+        if (newEventDto.getEventDate().isBefore(LocalDateTime.now().minusHours(2))) {
             throw new ConflictException("Нужно указать дату, которая еще не наступила. " + newEventDto.getEventDate());
         } else {
             Event newEvent = newDtoToEvent(newEventDto, user, category, LocalDateTime.now());
-            return eventToDto(eventRepository.save(newEvent));
+            return adminToEventRequestDto(eventRepository.save(newEvent));
         }
     }
 
@@ -96,10 +96,10 @@ public class EventServiceImp implements EventService {
             }
         }
         if (event.getState() != null) {
-            if (event.getState().equals(State.PUBLISHED)) {
+            if (event.getState().equals(State.PUBLISHED.name())) {
                 throw new ConflictException("Могут быть изменены только ожидающие или отмененные события");
             } else {
-                event.setState(StateAction.getState(updateEventUserRequest.getStateAction()));
+                event.setState(StateAction.getState(updateEventUserRequest.getStateAction()).name());
             }
         }
         if (updateEventUserRequest.getCategory() != null) {
@@ -110,10 +110,10 @@ public class EventServiceImp implements EventService {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<EventDto> getEventsByAdmin(List<Long> ids, List<State> states,
+    public Collection<EventDto> getEventsByAdmin(List<Long> ids, List<String> states,
                                                  List<Long> categories, LocalDateTime rangeStart,
                                                  LocalDateTime rangeEnd, Pageable pageable) {
-        BooleanBuilder booleanBuilder = addQuery(ids, states, categories, rangeStart, rangeEnd);
+        BooleanBuilder booleanBuilder = createQuery(ids, states, categories, rangeStart, rangeEnd);
         Page<Event> page;
         if (booleanBuilder.getValue() != null) {
             page = eventRepository.findAll(booleanBuilder, pageable);
@@ -141,7 +141,7 @@ public class EventServiceImp implements EventService {
             if (event.getState() != null) {
                 changeEventState(event, updateEventAdminRequest.getStateAction());
             } else {
-                event.setState(StateAction.getState(updateEventAdminRequest.getStateAction()));
+                event.setState(StateAction.getState(updateEventAdminRequest.getStateAction()).name());
             }
         }
         if (updateEventAdminRequest.getCategory() != null) {
@@ -152,10 +152,10 @@ public class EventServiceImp implements EventService {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<RequestDto> getUserEventRequests(Long userId, Long eventId) {
+    public List<RequestDto> getUserEventRequests(Long userId, Long eventId) {
         checkUser(userId);
         Event event = checkEcent(eventId, userId);
-        return requestsToDtoCollection(event.getRequests());
+        return requestsSetToDtoList(event.getRequests());
     }
 
     @Override
@@ -180,9 +180,12 @@ public class EventServiceImp implements EventService {
     @Transactional
     public EventDto getEventByIdPublic(Long eventId, HttpServletRequest servlet) {
         statisticClient.postStats(servlet);
-        Event event = eventRepository.findByIdAndState(eventId, State.PUBLISHED)
-                .orElseThrow(() -> new NotFoundException("Событие с id: " + eventId + " не найдено"));
-        return eventToDto(eventRepository.save(setViews(List.of(event)).get(0)));
+        try {
+            Event event = eventRepository.findByIdAndState(eventId, State.PUBLISHED.name());
+            return eventToDto(eventRepository.save(setViews(List.of(event)).get(0)));
+        } catch (Exception e) {
+            throw new NotFoundException("Событие с id: " + eventId + " не найдено");
+        }
     }
 
     @Override
@@ -191,7 +194,7 @@ public class EventServiceImp implements EventService {
                                                       LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                       Boolean onlyAvailable, Pageable pageable, HttpServletRequest servlet) {
         statisticClient.postStats(servlet);
-        BooleanBuilder booleanBuilder = addQuery(null, null, categories, rangeStart, rangeEnd);
+        BooleanBuilder booleanBuilder = createQuery(null, null, categories, rangeStart, rangeEnd);
         Page<Event> page;
         if (text != null) {
             booleanBuilder.and(QEvent.event.annotation.likeIgnoreCase(text))
@@ -268,42 +271,21 @@ public class EventServiceImp implements EventService {
     private void changeEventState(Event event, String actionState) {
         switch (StateAction.getState(actionState)) {
             case PUBLISHED:
-                if (event.getState().equals(State.PENDING)) {
-                    event.setState(State.PUBLISHED);
+                if (event.getState().equals(State.PENDING.name())) {
+                    event.setState(State.PUBLISHED.name());
                     event.setPublishedOn(LocalDateTime.now());
                     break;
                 } else {
                     throw new ConflictException("не правильное состояние события:" + event.getState());
                 }
             case CANCELED:
-                if (event.getState().equals(State.PENDING)) {
-                    event.setState(State.CANCELED);
+                if (event.getState().equals(State.PENDING.name())) {
+                    event.setState(State.CANCELED.name());
                     break;
                 } else {
                     throw new ConflictException("не правильное состояние события: " + event.getState());
                 }
         }
-    }
-
-    private BooleanBuilder addQuery(List<Long> ids, List<State> states, List<Long> categories,
-                                    LocalDateTime rangeStart, LocalDateTime rangeEnd) {
-        BooleanBuilder booleanBuilder = new BooleanBuilder();
-        if (ids != null && !ids.isEmpty()) {
-            booleanBuilder.and(QEvent.event.initiator.id.in(ids));
-        }
-        if (states != null && !states.isEmpty()) {
-            booleanBuilder.and(QEvent.event.state.in(List.of(State.values())));
-        }
-        if (categories != null && !categories.isEmpty()) {
-            booleanBuilder.and(QEvent.event.category.id.in(categories));
-        }
-        if (rangeStart != null) {
-            booleanBuilder.and(QEvent.event.eventDate.after(rangeStart));
-        }
-        if (rangeEnd != null) {
-            booleanBuilder.and(QEvent.event.eventDate.before(rangeEnd));
-        }
-        return booleanBuilder;
     }
 
     private List<Event> setViews(List<Event> events) {
@@ -317,15 +299,39 @@ public class EventServiceImp implements EventService {
         List<StatsDto> statsDtoList;
         Map<Long, Integer> confRequests = (requestRepository.getConfirmedRequest(eventsId));
         statsDtoList = statisticClient.getViews(uriEvents.keySet());
+        if (statsDtoList == null || statsDtoList.isEmpty()) {
+            return events;
+        }
         for (StatsDto statDto : statsDtoList) {
             String uri = statDto.getUri();
             Event event = uriEvents.get(uri);
-            event.setViews(statDto.getHits());
+            event.setViews(Long.valueOf(statDto.getHits()));
             Integer confirmedRequest = confRequests.get(event.getId());
             event.setConfirmedRequests(confirmedRequest == null ? 0 : confirmedRequest);
             resp.add(event);
         }
         eventRepository.saveAll(resp);
         return new ArrayList<>(resp);
+    }
+
+    private BooleanBuilder createQuery(List<Long> id, List<String> states, List<Long> categories,
+                                       LocalDateTime rangeStart, LocalDateTime rangeEnd) {
+        BooleanBuilder booleanBuilder = new BooleanBuilder();
+        if (id != null && !id.isEmpty()) {
+            booleanBuilder.and(QEvent.event.initiator.id.in(id));
+        }
+        if (states != null && !states.isEmpty()) {
+            booleanBuilder.and(QEvent.event.state.in(states));
+        }
+        if (categories != null && !categories.isEmpty()) {
+            booleanBuilder.and(QEvent.event.category.id.in(categories));
+        }
+        if (rangeStart != null) {
+            booleanBuilder.and(QEvent.event.eventDate.after(rangeStart));
+        }
+        if (rangeEnd != null) {
+            booleanBuilder.and(QEvent.event.eventDate.before(rangeEnd));
+        }
+        return booleanBuilder;
     }
 }

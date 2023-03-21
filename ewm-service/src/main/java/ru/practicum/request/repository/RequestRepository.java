@@ -15,6 +15,8 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     List<Request> findAllByIdIn(List<Long> requestIds);
 
+    List<Request> findAllByRequesterIdAndEventId(Long userId, Long eventId);
+
     @Query("select new map (req.event.id , count(req.id))  " +
             " from Request req where req.event.id in (?1)  and req.status = 'CONFIRMED'" +
             " group by req.event.id")

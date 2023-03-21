@@ -4,10 +4,10 @@ import ru.practicum.dto.HitDto;
 import ru.practicum.dto.StatsDto;
 import ru.practicum.model.StatsRequest;
 
-import java.util.Collection;
+import java.util.List;
 
 public interface StatsService {
-    void createHit(HitDto hitDto);
+    void saveHit(HitDto hitDto);
 
-    Collection<StatsDto> getStats(StatsRequest request);
+    List<StatsDto> getStats(StatsRequest request);
 }

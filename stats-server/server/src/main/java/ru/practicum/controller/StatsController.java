@@ -9,7 +9,6 @@ import ru.practicum.model.StatsRequest;
 import ru.practicum.service.StatsService;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
 
 @RestController
@@ -23,11 +22,11 @@ public class StatsController {
 
     @GetMapping(path = "/stats")
     @ResponseStatus(HttpStatus.OK)
-    public Collection<StatsDto> getStats(@RequestParam(defaultValue = "2020-05-05 00:00:00")
+    public List<StatsDto> getStats(@RequestParam(defaultValue = "2020-05-05 00:00:00")
                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
                                          @RequestParam(defaultValue = "2030-05-05 00:00:00")
                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
-                                         @RequestParam List<String> uris,
+                                         @RequestParam(required = false) List<String> uris,
                                          @RequestParam(defaultValue = "false") Boolean unique) {
         return statsService.getStats(new StatsRequest(start, end, uris, unique));
     }
@@ -35,6 +34,6 @@ public class StatsController {
     @PostMapping(path = "/hit")
     @ResponseStatus(HttpStatus.CREATED)
     public void createHit(@RequestBody HitDto hitDto) {
-        statsService.createHit(hitDto);
+        statsService.saveHit(hitDto);
     }
 }

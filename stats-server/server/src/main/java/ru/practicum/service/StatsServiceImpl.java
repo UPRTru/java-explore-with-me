@@ -8,10 +8,10 @@ import ru.practicum.model.Stats;
 import ru.practicum.model.StatsRequest;
 import ru.practicum.repository.StatsRepository;
 
-import java.util.Collection;
+import java.util.List;
 
 import static ru.practicum.mapper.HitMapper.dtoToHit;
-import static ru.practicum.mapper.StatsMapper.statsToDtoCollection;
+import static ru.practicum.mapper.StatsMapper.statsToStatsDtoCollection;
 
 @Service
 public class StatsServiceImpl implements StatsService {
@@ -23,23 +23,23 @@ public class StatsServiceImpl implements StatsService {
 
     @Transactional
     @Override
-    public void createHit(HitDto hitDto) {
+    public void saveHit(HitDto hitDto) {
         statsRepository.save(dtoToHit(hitDto));
     }
 
     @Transactional(readOnly = true)
     @Override
-    public Collection<StatsDto> getStats(StatsRequest request) {
-        Collection<Stats> stats;
+    public List<StatsDto> getStats(StatsRequest request) {
+        List<Stats> stats;
         if (request.getUris() == null || request.getUris().isEmpty()) {
             stats = (request.getUnique() ?
-                    statsRepository.getUniqueViewsWithoutUris(request.getStart(), request.getEnd()) :
-                    statsRepository.getAllViewsWithoutUris(request.getStart(), request.getEnd()));
+                    statsRepository.findUniqueViewsWithoutUris(request.getStart(), request.getEnd()) :
+                    statsRepository.findAllViewsWithoutUris(request.getStart(), request.getEnd()));
         } else {
             stats = request.getUnique() ?
-                    statsRepository.getUniqueViews(request.getStart(), request.getEnd(), request.getUris()) :
-                    statsRepository.getAllViews(request.getStart(), request.getEnd(), request.getUris());
+                    statsRepository.findUniqueViews(request.getUris(), request.getStart(), request.getEnd()) :
+                    statsRepository.findAllViews(request.getUris(), request.getStart(), request.getEnd());
         }
-        return statsToDtoCollection(stats);
+        return statsToStatsDtoCollection(stats);
     }
 }

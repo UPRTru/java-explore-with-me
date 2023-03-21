@@ -1,10 +1,15 @@
 package ru.practicum.user.service;
 
+import com.querydsl.core.BooleanBuilder;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.user.dto.UserDto;
+import ru.practicum.user.model.QUser;
+import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
 import java.util.Collection;
@@ -23,16 +28,26 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public UserDto createUser(UserDto userDto) {
+        if (!userRepository.findAllByEmail(userDto.getEmail()).isEmpty()) {
+            throw new ConflictException("Емейл занят.");
+        }
         return userToDto(userRepository.save(dtoToUser(userDto)));
     }
 
     @Transactional(readOnly = true)
     @Override
     public Collection<UserDto> getUsers(List<Long> listId, Pageable pageable) {
-        if (listId == null) {
-            return userToDtoCollection(userRepository.findAll(pageable).toList());
+        BooleanBuilder booleanBuilder = new BooleanBuilder();
+        if (listId != null && !listId.isEmpty()) {
+            booleanBuilder.and(QUser.user.id.in(listId));
         }
-        return userToDtoCollection(userRepository.findAllByIdIn(listId, pageable).toList());
+        Page<User> page;
+        if (booleanBuilder.getValue() != null) {
+            page = userRepository.findAll(booleanBuilder.getValue(), pageable);
+        } else {
+            page = userRepository.findAll(pageable);
+        }
+        return userToDtoCollection(page.toList());
     }
 
     @Transactional

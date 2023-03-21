@@ -4,10 +4,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.event.dto.EventDto;
-import ru.practicum.event.dto.EventShortDto;
-import ru.practicum.event.dto.NewEventDto;
-import ru.practicum.event.dto.UpdateEventRequest;
+import ru.practicum.event.dto.*;
 import ru.practicum.event.service.EventService;
 import ru.practicum.request.dto.EventRequestStatusUpdate;
 import ru.practicum.request.dto.EventRequestStatusUpdateResult;
@@ -29,7 +26,7 @@ public class PrivateEventController {
 
     @PostMapping("{userId}/events")
     @ResponseStatus(HttpStatus.CREATED)
-    public EventDto addEventDto(@PathVariable @Min(1) Long userId, @RequestBody @Valid NewEventDto eventDto) {
+    public EventRequestDto addEventDto(@PathVariable @Min(1) Long userId, @RequestBody @Valid NewEventDto eventDto) {
         return eventService.addNewEvent(userId, eventDto);
     }
 

@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.dto.EventDto;
 import ru.practicum.event.dto.UpdateEventRequest;
-import ru.practicum.event.enums.State;
 import ru.practicum.event.service.EventService;
 
 import javax.validation.constraints.Min;
@@ -27,13 +26,13 @@ public class AdminEventController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Collection<EventDto> getEventsByFiltersForAdmin(
-                        @RequestParam(required = false) List<Long> users,
-                        @RequestParam(required = false) List<State> states,
-                        @RequestParam(required = false) List<Long> categories,
-                        @RequestParam(required = false) @DateTimeFormat(pattern = FORMATTER) LocalDateTime rangeStart,
-                        @RequestParam(required = false) @DateTimeFormat(pattern = FORMATTER) LocalDateTime rangeEnd,
-                        @RequestParam(defaultValue = "0") @Min(0) Integer from,
-                        @RequestParam(defaultValue = "10") @Min(1) Integer size) {
+            @RequestParam(required = false) List<Long> users,
+            @RequestParam(required = false) List<String> states,
+            @RequestParam(required = false) List<Long> categories,
+            @RequestParam(required = false) @DateTimeFormat(pattern = FORMATTER) LocalDateTime rangeStart,
+            @RequestParam(required = false) @DateTimeFormat(pattern = FORMATTER) LocalDateTime rangeEnd,
+            @RequestParam(defaultValue = "0") @Min(0) Integer from,
+            @RequestParam(defaultValue = "10") @Min(1) Integer size) {
         return eventService.getEventsByAdmin(users, states, categories, rangeStart, rangeEnd,
                 PageRequest.of(from / size, size));
     }

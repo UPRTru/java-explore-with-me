@@ -54,7 +54,7 @@ public class Event {
     @Column(name = "published_on")
     LocalDateTime publishedOn;
     @Column
-    State state = State.PENDING;
+    String state = State.PENDING.name();
     @Column
     Long views = 0L;
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)

@@ -27,6 +27,9 @@ public class CategoryServiceImp implements CategoryService {
     @Transactional
     @Override
     public CategoryDto createCategory(CategoryDto categoryDto) {
+        if (!categoryRepository.findAllByName(categoryDto.getName()).isEmpty()) {
+            throw new ConflictException("Имя категории уже занято.");
+        }
         return categoryToDto(categoryRepository.save(dtoToCategory(categoryDto)));
     }
 
@@ -35,6 +38,9 @@ public class CategoryServiceImp implements CategoryService {
     public CategoryDto updateCategory(Long categoryId, CategoryDto updateCategory) {
         categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException("Категория с id: " + categoryId + " не найдена."));
+        if (!categoryRepository.findAllByName(updateCategory.getName()).isEmpty()) {
+            throw new ConflictException("Имя категории уже занято.");
+        }
         return categoryToDto(categoryRepository.save(dtoToCategory(updateCategory)));
     }
 

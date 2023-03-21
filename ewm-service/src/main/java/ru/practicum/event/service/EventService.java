@@ -1,11 +1,7 @@
 package ru.practicum.event.service;
 
 import org.springframework.data.domain.Pageable;
-import ru.practicum.event.dto.EventDto;
-import ru.practicum.event.dto.EventShortDto;
-import ru.practicum.event.dto.NewEventDto;
-import ru.practicum.event.dto.UpdateEventRequest;
-import ru.practicum.event.enums.State;
+import ru.practicum.event.dto.*;
 import ru.practicum.request.dto.EventRequestStatusUpdate;
 import ru.practicum.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.request.dto.RequestDto;
@@ -16,7 +12,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface EventService {
-    EventDto addNewEvent(Long userId, NewEventDto eventDto);
+    EventRequestDto addNewEvent(Long userId, NewEventDto eventDto);
 
     Collection<EventShortDto> getPrivateUserEvents(Long userId, Pageable pageable);
 
@@ -24,7 +20,7 @@ public interface EventService {
 
     EventDto updateEventUser(Long userId, Long eventId, UpdateEventRequest updateEvent);
 
-    Collection<EventDto> getEventsByAdmin(List<Long> ids, List<State> states, List<Long> categories,
+    Collection<EventDto> getEventsByAdmin(List<Long> ids, List<String> states, List<Long> categories,
                                           LocalDateTime rangeStart, LocalDateTime rangeEnd, Pageable pageable);
 
     EventDto updateEventAdmin(Long eventId, UpdateEventRequest updateEvent);
