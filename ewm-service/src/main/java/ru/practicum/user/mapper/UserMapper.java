@@ -1,9 +1,10 @@
 package ru.practicum.user.mapper;
 
+import org.springframework.data.domain.Page;
 import ru.practicum.user.dto.UserDto;
 import ru.practicum.user.model.User;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class UserMapper {
@@ -15,7 +16,7 @@ public class UserMapper {
         return new UserDto(user.getId(), user.getName(), user.getEmail());
     }
 
-    public static Collection<UserDto> userToDtoCollection(Collection<User> userPage) {
+    public static List<UserDto> userToDtoCollection(Page<User> userPage) {
         return userPage.stream().map(UserMapper::userToDto).collect(Collectors.toList());
     }
 }

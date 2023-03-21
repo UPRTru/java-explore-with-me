@@ -8,11 +8,11 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.user.dto.UserDto;
+import ru.practicum.user.dto.UserListDto;
 import ru.practicum.user.model.QUser;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
-import java.util.Collection;
 import java.util.List;
 
 import static ru.practicum.user.mapper.UserMapper.*;
@@ -36,10 +36,10 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public Collection<UserDto> getUsers(List<Long> listId, Pageable pageable) {
+    public UserListDto getUsers(List<Long> ids, Pageable pageable) {
         BooleanBuilder booleanBuilder = new BooleanBuilder();
-        if (listId != null && !listId.isEmpty()) {
-            booleanBuilder.and(QUser.user.id.in(listId));
+        if (ids != null && !ids.isEmpty()) {
+            booleanBuilder.and(QUser.user.id.in(ids));
         }
         Page<User> page;
         if (booleanBuilder.getValue() != null) {
@@ -47,14 +47,21 @@ public class UserServiceImpl implements UserService {
         } else {
             page = userRepository.findAll(pageable);
         }
-        return userToDtoCollection(page.toList());
+        return UserListDto
+                .builder()
+                .users(userToDtoCollection(page))
+                .build();
     }
 
     @Transactional
     @Override
     public void deleteUser(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
+        checkUser(userId);
         userRepository.deleteById(userId);
+    }
+
+    private User checkUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
     }
 }
