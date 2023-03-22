@@ -21,7 +21,7 @@ import java.util.Set;
 public class StatisticClient extends Client {
     private final String url;
 
-    public StatisticClient(@Value("http://localhost:9090") String serverUrl, RestTemplateBuilder builder) {
+    public StatisticClient(@Value("http://stats:9090") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder.uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
                         .requestFactory(HttpComponentsClientHttpRequestFactory::new)
