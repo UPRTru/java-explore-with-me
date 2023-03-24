@@ -11,10 +11,11 @@
 
     <artifactId>stats-server</artifactId>
     <packaging>pom</packaging>
+
     <modules>
         <module>server</module>
-        <module>dto</module>
         <module>client</module>
+        <module>dto</module>
     </modules>
 
     <properties>

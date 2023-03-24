@@ -1,21 +1,19 @@
 package ru.practicum.mapper;
 
+import lombok.experimental.UtilityClass;
 import ru.practicum.dto.StatsDto;
 import ru.practicum.model.Stats;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
+@UtilityClass
 public class StatsMapper {
     public static StatsDto statsToStatsDto(Stats stats) {
-        return StatsDto.builder()
-                .app(stats.getApp())
-                .uri(stats.getUri())
-                .hits(stats.getHits())
-                .build();
+        return new StatsDto(stats.getApp(), stats.getUri(), Math.toIntExact(stats.getHits()));
     }
 
-    public static Collection<StatsDto> statsToStatsDtoCollection(Collection<Stats> statsCollection) {
+    public static List<StatsDto> statsToStatsDtoCollection(List<Stats> statsCollection) {
         return statsCollection.stream().map(StatsMapper::statsToStatsDto).collect(Collectors.toList());
     }
 }
