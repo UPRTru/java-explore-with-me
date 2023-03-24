@@ -20,10 +20,10 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     @Query("select new map (req.event.id , count(req.id))  " +
             " from Request req where req.event.id in (?1)  and req.status = 'CONFIRMED'" +
             " group by req.event.id")
-    List<Map<Integer, Map<Long, Integer>>> getConfirmedRequestCount(List<Long> ids);
+    List<Map<Integer, Map<Long, Integer>>> getConfirmedRequestCount(List<Long> eventsId);
 
-    default Map<Long, Integer> getConfirmedRequest(List<Long> ids) {
-        var count = getConfirmedRequestCount(ids);
+    default Map<Long, Integer> getConfirmedRequest(List<Long> eventsId) {
+        var count = getConfirmedRequestCount(eventsId);
         Map<Long, Integer> result = new HashMap<>();
         for (Map e : count) {
             long id = (long) e.get("0");

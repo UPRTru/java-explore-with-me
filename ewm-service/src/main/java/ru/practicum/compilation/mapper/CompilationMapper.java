@@ -1,5 +1,6 @@
 package ru.practicum.compilation.mapper;
 
+import lombok.experimental.UtilityClass;
 import org.springframework.data.domain.Page;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.dto.NewCompilationDto;
@@ -11,6 +12,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@UtilityClass
 public class CompilationMapper {
     public static CompilationDto compilationToDto(Compilation compilation) {
         return new CompilationDto(compilation.getId(),

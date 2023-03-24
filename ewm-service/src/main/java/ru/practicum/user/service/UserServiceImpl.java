@@ -1,6 +1,7 @@
 package ru.practicum.user.service;
 
 import com.querydsl.core.BooleanBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import static ru.practicum.user.mapper.UserMapper.*;
 
+@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
@@ -29,9 +31,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto createUser(UserDto userDto) {
         if (!userRepository.findAllByEmail(userDto.getEmail()).isEmpty()) {
-            throw new ConflictException("Емейл занят.");
+            log.info("Емейл занят. {}", userDto.getEmail());
+            throw new ConflictException("Емейл занят. " + userDto.getEmail());
         }
-        return userToDto(userRepository.save(dtoToUser(userDto)));
+        User user = dtoToUser(userDto);
+        log.info("Добавлен новый пользователь в базу данных. {}", user);
+        return userToDto(userRepository.save(user));
     }
 
     @Transactional(readOnly = true)
@@ -47,8 +52,8 @@ public class UserServiceImpl implements UserService {
         } else {
             page = userRepository.findAll(pageable);
         }
-        return UserListDto
-                .builder()
+        log.info("Получение списка пользователей id: {}.", ids);
+        return UserListDto.builder()
                 .users(userToDtoCollection(page))
                 .build();
     }
@@ -56,12 +61,13 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void deleteUser(Long userId) {
-        checkUser(userId);
+        try {
+            userRepository.findById(userId);
+        } catch (Exception e) {
+            log.info("Пользователь с id: {} не найден.", userId);
+            throw new NotFoundException("Пользователь с id: " + userId + " не найден.");
+        }
+        log.info("Удаление пользователя id: {}", userId);
         userRepository.deleteById(userId);
-    }
-
-    private User checkUser(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
     }
 }

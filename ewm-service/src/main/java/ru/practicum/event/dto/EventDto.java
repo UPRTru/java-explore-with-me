@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.category.dto.CategoryDto;
+import ru.practicum.dto.constants.Constants;
 import ru.practicum.event.location.Location;
 import ru.practicum.user.dto.UserDto;
 
@@ -19,16 +20,16 @@ public class EventDto {
     String annotation;
     CategoryDto category;
     Integer confirmedRequests;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = Constants.FORMAT_DATE_TIME)
     LocalDateTime createdOn;
     String description;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = Constants.FORMAT_DATE_TIME)
     LocalDateTime eventDate;
     Location location;
     UserDto initiator;
     Boolean paid;
     Integer participantLimit;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = Constants.FORMAT_DATE_TIME)
     LocalDateTime publishedOn;
     Boolean requestModeration;
     String state;

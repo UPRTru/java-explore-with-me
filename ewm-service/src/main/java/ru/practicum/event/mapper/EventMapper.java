@@ -1,5 +1,7 @@
 package ru.practicum.event.mapper;
 
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import ru.practicum.category.mapper.CategoryMapper;
 import ru.practicum.category.model.Category;
 import ru.practicum.event.dto.*;
@@ -9,13 +11,13 @@ import ru.practicum.user.mapper.UserMapper;
 import ru.practicum.user.model.User;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public class EventMapper {
-    public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+@Slf4j
+@UtilityClass
+public class EventMapper {
     public static EventRequestDto adminToEventRequestDto(Event event) {
         return new EventRequestDto(event.getId(), event.getTitle(), event.getAnnotation(),
                 CategoryMapper.categoryToDto(event.getCategory()), event.getPaid(),
@@ -82,6 +84,7 @@ public class EventMapper {
         if (updateEventRequest.getTitle() != null && !updateEventRequest.getTitle().isEmpty()) {
             event.setTitle(updateEventRequest.getTitle());
         }
+        log.info("Обновление события: {}", event);
         return event;
     }
 }

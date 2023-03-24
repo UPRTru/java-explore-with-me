@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import ru.practicum.dto.constants.Constants;
 
 import java.time.LocalDateTime;
 
@@ -19,7 +20,7 @@ public class HitDto {
     String uri;
     @JsonProperty("ip")
     String ip;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = Constants.FORMAT_DATE_TIME)
     @JsonProperty("timestamp")
     LocalDateTime timestamp;
 }

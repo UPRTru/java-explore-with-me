@@ -1,5 +1,6 @@
 package ru.practicum.request.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.event.enums.State;
@@ -20,6 +21,7 @@ import java.util.List;
 import static ru.practicum.request.maper.RequestMapper.requestToDto;
 import static ru.practicum.request.maper.RequestMapper.requestsListToDtoList;
 
+@Slf4j
 @Service
 public class RequestServiceImp implements RequestService {
     private final RequestRepository requestRepository;
@@ -36,12 +38,12 @@ public class RequestServiceImp implements RequestService {
     @Override
     @Transactional
     public RequestDto createRequest(Long userId, Long eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с id: " + eventId + " не найдено"));
-        User requester = userRepository.findById(userId)
-                        .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
+        Event event = checkEvent(eventId);
+        User requester = checkUser(userId);
         if (!requestRepository.findAllByRequesterIdAndEventId(userId, eventId).isEmpty()) {
-            throw new ConflictException("Request уже существует.");
+            log.info("Запрос с id пользователя: {}, id события: {} уже существует.", userId, eventId);
+            throw new ConflictException("Запрос с id пользователя: " + userId + ", id события: "
+                    + eventId + " уже существует.");
         }
         validateCreatingRequest(event, userId);
         if (event.getParticipantLimit() == 0 || event.getParticipantLimit() > event.getConfirmedRequests()) {
@@ -53,27 +55,27 @@ public class RequestServiceImp implements RequestService {
             } else {
                 createRequest.setStatus(RequestStatus.PENDING.name());
             }
+            log.info("Добавлен новый запрос в базу данных. {}", createRequest);
             return requestToDto(requestRepository.save(createRequest));
         } else {
-            throw new ConflictException("Достигнут лимит запросов.");
+            log.info("Достигнут лимит запросов. Событие id: {}", eventId);
+            throw new ConflictException("Достигнут лимит запросов. Событие id: " + eventId);
         }
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<RequestDto> getUserRequests(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
+        checkUser(userId);
+        log.info("Получение запроса пользователя с id: {}", userId);
         return requestsListToDtoList(requestRepository.findAllByRequesterId(userId));
     }
 
     @Override
     @Transactional
     public RequestDto canceledRequest(Long userId, Long requestId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
-        Request request = requestRepository.findById(requestId)
-                .orElseThrow(() -> new NotFoundException("Запрос с id: " + requestId + " не найден"));
+        checkUser(userId);
+        Request request = checkRequest(requestId);
         Event event = request.getEvent();
         if (request.getStatus().equals(RequestStatus.CONFIRMED.name())) {
             event.setConfirmedRequests(event.getConfirmedRequests() - 1);
@@ -82,15 +84,52 @@ public class RequestServiceImp implements RequestService {
         } else {
             request.setStatus(RequestStatus.CANCELED.name());
         }
+        log.info("Отмена запроса. {}", request);
         return requestToDto(requestRepository.save(request));
     }
 
     private void validateCreatingRequest(Event event, Long userId) {
         if (event.getInitiator().getId().equals(userId)) {
-            throw new ConflictException("Вы не можете создать запрос на участие в вашем собственном мероприятии");
+            log.info("Вы не можете создать запрос на участие в вашем собственном мероприятии. " +
+                    "Пользователь id: {} Событие id: {}", userId, event.getId());
+            throw new ConflictException("Вы не можете создать запрос на участие в вашем собственном мероприятии. " +
+                    "Пользователь id: " + userId + " Событие id: " + event.getId());
         }
         if (!event.getState().equals(State.PUBLISHED.name())) {
-            throw new ConflictException("Вы не можете участвовать в неопубликованном мероприятии");
+            log.info("Вы не можете участвовать в неопубликованном мероприятии. " +
+                    "Пользователь id: {} Событие id: {}", userId, event.getId());
+            throw new ConflictException("Вы не можете участвовать в неопубликованном мероприятии. " +
+                    "Пользователь id: " + userId + " Событие id: " + event.getId());
+        }
+    }
+
+    private User checkUser(Long userId) {
+        try {
+            return userRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
+        } catch (NotFoundException e) {
+            log.info("Пользователь с id: {} не найден.", userId);
+            throw new NotFoundException(e.getMessage());
+        }
+    }
+
+    private Event checkEvent(Long eventId) {
+        try {
+            return eventRepository.findById(eventId)
+                    .orElseThrow(() -> new NotFoundException("Событие с id: " + eventId + " не найдено."));
+        } catch (NotFoundException e) {
+            log.info("Событие с id: {} не найдено.", eventId);
+            throw new NotFoundException(e.getMessage());
+        }
+    }
+
+    private Request checkRequest(Long requestId) {
+        try {
+            return requestRepository.findById(requestId)
+                    .orElseThrow(() -> new NotFoundException("Запрос с id: " + requestId + " не найден"));
+        } catch (NotFoundException e) {
+            log.info("Запрос с id: {} не найден.", requestId);
+            throw new NotFoundException(e.getMessage());
         }
     }
 }

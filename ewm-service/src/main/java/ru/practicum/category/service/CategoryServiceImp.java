@@ -1,5 +1,6 @@
 package ru.practicum.category.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import java.util.Collection;
 
 import static ru.practicum.category.mapper.CategoryMapper.*;
 
+@Slf4j
 @Service
 public class CategoryServiceImp implements CategoryService {
     private final CategoryRepository categoryRepository;
@@ -27,45 +29,63 @@ public class CategoryServiceImp implements CategoryService {
     @Transactional
     @Override
     public CategoryDto createCategory(CategoryDto categoryDto) {
-        if (!categoryRepository.findAllByName(categoryDto.getName()).isEmpty()) {
-            throw new ConflictException("Имя категории уже занято.");
-        }
-        return categoryToDto(categoryRepository.save(dtoToCategory(categoryDto)));
+        checkName(categoryDto.getName());
+        Category category = dtoToCategory(categoryDto);
+        log.info("Добавлена новая категория в базу данных: {}", category);
+        return categoryToDto(categoryRepository.save(category));
     }
 
     @Transactional
     @Override
     public CategoryDto updateCategory(Long categoryId, CategoryDto updateCategory) {
-        categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException("Категория с id: " + categoryId + " не найдена."));
-        if (!categoryRepository.findAllByName(updateCategory.getName()).isEmpty()) {
-            throw new ConflictException("Имя категории уже занято.");
-        }
-        return categoryToDto(categoryRepository.save(dtoToCategory(updateCategory)));
+        checkCategory(categoryId);
+        checkName(updateCategory.getName());
+        Category category = dtoToCategory(updateCategory);
+        log.info("Категория обновлена. {}", category);
+        return categoryToDto(categoryRepository.save(category));
     }
 
     @Transactional
     @Override
     public void deleteCategory(Long categoryId) {
-        categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException("Категория с id: " + categoryId + " не найдена."));
+        checkCategory(categoryId);
         if (!eventRepository.findAllByCategoryId(categoryId).isEmpty()) {
-            throw new ConflictException("Категория не пустая.");
+            log.info("Категория di: {} не пустая.", categoryId);
+            throw new ConflictException("Категория di: " + categoryId + " не пустая.");
         }
+        log.info("Категория с id: {} удалена.", categoryId);
         categoryRepository.deleteById(categoryId);
     }
 
     @Transactional(readOnly = true)
     @Override
     public Collection<CategoryDto> getCategories(Pageable pageable) {
+        log.info("Получение списка категорий.");
         return categoryToDtoCollection(categoryRepository.findAll(pageable));
     }
 
     @Transactional(readOnly = true)
     @Override
     public CategoryDto getCategoryById(Long categoryId) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException("Категория с id: " + categoryId + " не найдена."));
+        Category category = checkCategory(categoryId);
+        log.info("Получение категории id: {}", categoryId);
         return categoryToDto(category);
+    }
+
+    private Category checkCategory(Long categoryId) {
+        try {
+            return categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new NotFoundException("Категория с id: " + categoryId + " не найдена."));
+        } catch (NotFoundException e) {
+            log.info("Категория с id: {} не найдена.", categoryId);
+            throw new NotFoundException(e.getMessage());
+        }
+    }
+
+    private void checkName(String name) {
+        if (!categoryRepository.findAllByName(name).isEmpty()) {
+            log.info("Имя категории уже занято: {}", name);
+            throw new ConflictException("Имя категории уже занято: " + name);
+        }
     }
 }

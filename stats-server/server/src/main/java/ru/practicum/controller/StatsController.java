@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.HitDto;
 import ru.practicum.dto.StatsDto;
+import ru.practicum.dto.constants.Constants;
 import ru.practicum.model.StatsRequest;
 import ru.practicum.service.StatsService;
 
@@ -23,9 +24,9 @@ public class StatsController {
     @GetMapping(path = "/stats")
     @ResponseStatus(HttpStatus.OK)
     public List<StatsDto> getStats(@RequestParam(defaultValue = "2020-05-05 00:00:00")
-                                         @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+                                         @DateTimeFormat(pattern = Constants.FORMAT_DATE_TIME) LocalDateTime start,
                                          @RequestParam(defaultValue = "2030-05-05 00:00:00")
-                                         @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
+                                         @DateTimeFormat(pattern = Constants.FORMAT_DATE_TIME) LocalDateTime end,
                                          @RequestParam(required = false) List<String> uris,
                                          @RequestParam(defaultValue = "false") Boolean unique) {
         return statsService.getStats(new StatsRequest(start, end, uris, unique));

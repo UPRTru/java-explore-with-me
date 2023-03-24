@@ -1,7 +1,9 @@
 package ru.practicum.event.enums;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.practicum.exception.ConflictException;
 
+@Slf4j
 public enum StateAction {
     SEND_TO_REVIEW, CANCEL_REVIEW, PUBLISH_EVENT, REJECT_EVENT;
 
@@ -16,9 +18,11 @@ public enum StateAction {
                 case PUBLISH_EVENT:
                     return State.PUBLISHED;
                 default:
+                    log.info("Событие не опубликовано");
                     throw new ConflictException("Событие не опубликовано");
         }
         } catch (IllegalArgumentException e) {
+            log.info("Событие не опубликовано");
             throw new ConflictException("Событие не опубликовано");
         }
     }

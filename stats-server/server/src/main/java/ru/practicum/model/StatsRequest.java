@@ -3,6 +3,7 @@ package ru.practicum.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import ru.practicum.dto.constants.Constants;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,9 +15,9 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StatsRequest {
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = Constants.FORMAT_DATE_TIME)
     LocalDateTime start;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = Constants.FORMAT_DATE_TIME)
     LocalDateTime end;
     List<String> uris;
     Boolean unique;
