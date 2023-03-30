@@ -330,8 +330,8 @@ public class EventServiceImp implements EventService {
         List<StatsDto> statsDtoList;
         List<Map<Integer, Map<Long, Integer>>> count = requestRepository.getConfirmedRequestCount(eventsId);
         Map<Long, Integer> confRequests = new HashMap<>();
-        for(Map<Integer,Map<Long,Integer>> crc : count){
-            for(Integer innerMapKeys : crc.keySet()){
+        for (Map<Integer,Map<Long,Integer>> crc : count) {
+            for (Integer innerMapKeys : crc.keySet()) {
                 Map<Long,Integer> innerMap = crc.get(innerMapKeys);
                 Long id = (long) innerMap.get(0L);
                 Integer confirmedRequest = innerMap.get(1L);

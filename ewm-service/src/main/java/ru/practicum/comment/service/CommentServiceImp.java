@@ -22,7 +22,7 @@ import static ru.practicum.comment.mapper.CommentMapper.*;
 
 @Slf4j
 @Service
-public class CommentServiceImp implements CommentService{
+public class CommentServiceImp implements CommentService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
