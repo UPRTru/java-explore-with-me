@@ -35,6 +35,6 @@ public class AdminCategoryController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public String deleteCategory(@PathVariable Long categoryId) {
         categoryService.deleteCategory(categoryId);
-        return "Категория с id: " + categoryId + " юыла удалена.";
+        return "Категория с id: " + categoryId + " была удалена.";
     }
 }

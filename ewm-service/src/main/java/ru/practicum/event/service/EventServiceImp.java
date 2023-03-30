@@ -328,7 +328,16 @@ public class EventServiceImp implements EventService {
         }
         Set<Event> resp = new HashSet<>();
         List<StatsDto> statsDtoList;
-        Map<Long, Integer> confRequests = (requestRepository.getConfirmedRequest(eventsId));
+        List<Map<Integer, Map<Long, Integer>>> count = requestRepository.getConfirmedRequestCount(eventsId);
+        Map<Long, Integer> confRequests = new HashMap<>();
+        for(Map<Integer,Map<Long,Integer>> crc : count){
+            for(Integer innerMapKeys : crc.keySet()){
+                Map<Long,Integer> innerMap = crc.get(innerMapKeys);
+                Long id = (long) innerMap.get(0L);
+                Integer confirmedRequest = innerMap.get(1L);
+                confRequests.put(id, confirmedRequest);
+            }
+        }
         statsDtoList = statisticClient.getViews(uriEvents.keySet());
         if (statsDtoList == null || statsDtoList.isEmpty()) {
             return events;

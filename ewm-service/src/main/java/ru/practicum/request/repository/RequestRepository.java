@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import ru.practicum.request.model.Request;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,19 +16,8 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     List<Request> findAllByRequesterIdAndEventId(Long userId, Long eventId);
 
-    @Query("select new map (req.event.id , count(req.id))  " +
-            " from Request req where req.event.id in (?1)  and req.status = 'CONFIRMED'" +
-            " group by req.event.id")
+    @Query("SELECT new map (req.event.id , count(req.id))  " +
+            "FROM Request req WHERE req.event.id IN (?1)  AND req.status = 'CONFIRMED' " +
+            "GROUP BY req.event.id")
     List<Map<Integer, Map<Long, Integer>>> getConfirmedRequestCount(List<Long> eventsId);
-
-    default Map<Long, Integer> getConfirmedRequest(List<Long> eventsId) {
-        var count = getConfirmedRequestCount(eventsId);
-        Map<Long, Integer> result = new HashMap<>();
-        for (Map e : count) {
-            long id = (long) e.get("0");
-            long confReq = (long) e.get("1");
-            result.put(id, (int) confReq);
-        }
-        return result;
-    }
 }
