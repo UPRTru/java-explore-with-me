@@ -35,7 +35,7 @@ public class AdminEventController {
                 PageRequest.of(from / size, size));
     }
 
-    @PatchMapping("{/eventId}")
+    @PatchMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventDto updateEventAdmin(@PathVariable Long eventId, @RequestBody UpdateEventRequest updateEvent) {
         return eventService.updateEventAdmin(eventId, updateEvent);

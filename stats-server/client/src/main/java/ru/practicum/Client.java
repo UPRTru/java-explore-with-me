@@ -7,7 +7,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
-
 @RequiredArgsConstructor
 public class Client {
     protected final RestTemplate rest;
