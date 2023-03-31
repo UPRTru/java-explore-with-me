@@ -1,5 +1,6 @@
 package ru.practicum.compilation.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,14 +22,10 @@ import static ru.practicum.compilation.mapper.CompilationMapper.*;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class CompilationServiceImp implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
-
-    public CompilationServiceImp(CompilationRepository compilationRepository, EventRepository eventRepository) {
-        this.compilationRepository = compilationRepository;
-        this.eventRepository = eventRepository;
-    }
 
     @Override
     @Transactional
@@ -43,7 +40,10 @@ public class CompilationServiceImp implements CompilationService {
     @Override
     @Transactional
     public void deleteCompilation(Long compId) {
-        checkCompilation(compId);
+        if (!compilationRepository.existsById(compId)) {
+            log.info("Компиляция с id: {} не найдена.", compId);
+            throw new NotFoundException("Компиляция с id: " + compId + " не найдена.");
+        }
         log.info("Компиляция с id: {} удалена.", compId);
         compilationRepository.deleteById(compId);
     }
@@ -51,7 +51,7 @@ public class CompilationServiceImp implements CompilationService {
     @Override
     @Transactional
     public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest updateCompilation) {
-        Compilation compilation = checkCompilation(compId);
+        Compilation compilation = getCompil(compId);
         Set<Event> findEvents = eventRepository.findAllByIdIn(updateCompilation.getEvents());
         if (updateCompilation.getPinned() != null && !updateCompilation.getPinned().equals(compilation.getPinned())) {
             compilation.setPinned(updateCompilation.getPinned());
@@ -69,7 +69,7 @@ public class CompilationServiceImp implements CompilationService {
     @Transactional(readOnly = true)
     public CompilationDto getCompilation(Long compId) {
         log.info("Получение компиляции id: {}", compId);
-        return compilationToDto(checkCompilation(compId));
+        return compilationToDto(getCompil(compId));
     }
 
     @Override
@@ -83,7 +83,7 @@ public class CompilationServiceImp implements CompilationService {
         }
     }
 
-    private Compilation checkCompilation(Long compId) {
+    private Compilation getCompil(Long compId) {
         try {
             return compilationRepository.findById(compId)
                     .orElseThrow(() -> new NotFoundException("Компиляция с id: " + compId + " не найдена."));

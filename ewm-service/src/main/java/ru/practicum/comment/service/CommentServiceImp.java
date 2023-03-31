@@ -1,5 +1,6 @@
 package ru.practicum.comment.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,17 +23,11 @@ import static ru.practicum.comment.mapper.CommentMapper.*;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class CommentServiceImp implements CommentService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
-
-    public CommentServiceImp(CommentRepository commentRepository, UserRepository userRepository,
-                             EventRepository eventRepository) {
-        this.commentRepository = commentRepository;
-        this.userRepository = userRepository;
-        this.eventRepository = eventRepository;
-    }
 
     @Transactional
     @Override
@@ -45,8 +40,24 @@ public class CommentServiceImp implements CommentService {
             log.info("Не указан id пользователя или события.");
             throw new ConflictException("Не указан id пользователя или события.");
         }
-        User user = checkUser(commentShortDto.getAuthorId());
-        Event event = checkEvent(commentShortDto.getEventId());
+        User user;
+        try {
+            user =  userRepository.findById(commentShortDto.getAuthorId())
+                    .orElseThrow(() -> new NotFoundException("Пользователь с id: "
+                            + commentShortDto.getAuthorId() + " не найден."));
+        } catch (NotFoundException e) {
+            log.info("Пользователь с id: {} не найден.", commentShortDto.getAuthorId());
+            throw new NotFoundException(e.getMessage());
+        }
+        Event event;
+        try {
+            event =  eventRepository.findById(commentShortDto.getEventId())
+                    .orElseThrow(() -> new NotFoundException("Событие с id: "
+                            + commentShortDto.getEventId() + " не найдено"));
+        } catch (NotFoundException e) {
+            log.info("Событие с id: {} не найдено", commentShortDto.getEventId());
+            throw new NotFoundException(e.getMessage());
+        }
         Comment comment = shortDtoToComment(commentShortDto, user, event, LocalDateTime.now());
         log.info("Добавлен новый отзыв в базу данных: {}", comment);
         return commentToDto(commentRepository.save(comment));
@@ -66,7 +77,10 @@ public class CommentServiceImp implements CommentService {
     @Transactional(readOnly = true)
     @Override
     public List<CommentDto> getCommentsUserAdmin(Long userId) {
-        checkUser(userId);
+        if (!userRepository.existsById(userId)) {
+            log.info("Пользователь с id: {} не найден.", userId);
+            throw new NotFoundException("Пользователь с id: " + userId + " не найден.");
+        }
         log.info("Получение списка комментариев пользователя id: {}", userId);
         return commentsToDtoList(commentRepository.findAllByAuthorId(userId));
     }
@@ -98,14 +112,20 @@ public class CommentServiceImp implements CommentService {
     @Transactional(readOnly = true)
     @Override
     public List<CommentDto> getCommentsPublic(Long eventId) {
-        checkEvent(eventId);
+        if (!eventRepository.existsById(eventId)) {
+            log.info("Событие с id: {} не найдено", eventId);
+            throw new NotFoundException("Событие с id: " + eventId + " не найдено");
+        }
         log.info("Получение списка комментариев события id: {}", eventId);
         return commentsToDtoList(commentRepository.findAllByEventIdOrderByCreated(eventId));
     }
 
     private Comment checkComment(Long commentId, Long userId) {
         if (userId != null) {
-            checkUser(userId);
+            if (!userRepository.existsById(userId)) {
+                log.info("Пользователь с id: {} не найден.", userId);
+                throw new NotFoundException("Пользователь с id: " + userId + " не найден.");
+            }
             try {
                 return commentRepository.findByIdAndAuthorId(commentId, userId)
                         .orElseThrow(() -> new NotFoundException("Комментарий id: " + commentId + " пользователя id: "
@@ -123,26 +143,6 @@ public class CommentServiceImp implements CommentService {
                 throw new NotFoundException(e.getMessage());
             }
 
-        }
-    }
-
-    private User checkUser(Long userId) {
-        try {
-            return userRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
-        } catch (NotFoundException e) {
-            log.info("Пользователь с id: {} не найден.", userId);
-            throw new NotFoundException(e.getMessage());
-        }
-    }
-
-    private Event checkEvent(Long eventId) {
-        try {
-            return eventRepository.findById(eventId)
-                    .orElseThrow(() -> new NotFoundException("Событие с id: " + eventId + " не найдено"));
-        } catch (NotFoundException e) {
-            log.info("Событие с id: {} не найдено", eventId);
-            throw new NotFoundException(e.getMessage());
         }
     }
 }

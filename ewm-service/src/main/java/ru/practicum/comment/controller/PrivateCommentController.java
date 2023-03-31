@@ -1,5 +1,6 @@
 package ru.practicum.comment.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -11,12 +12,9 @@ import ru.practicum.comment.service.CommentService;
 @RestController
 @RequestMapping("/users")
 @Validated
+@RequiredArgsConstructor
 public class PrivateCommentController {
     private final CommentService commentService;
-
-    public PrivateCommentController(CommentService commentService) {
-        this.commentService = commentService;
-    }
 
     //Создание уомментария пользователем
     @PostMapping("/comments")
@@ -26,7 +24,7 @@ public class PrivateCommentController {
     }
 
     //Редактирование комментария пользователем
-    @PatchMapping("{userId}/comments/{commentId}")
+    @PatchMapping("/{userId}/comments/{commentId}")
     @ResponseStatus(HttpStatus.OK)
     public CommentDto updateCommentUserPrivate(@PathVariable Long userId, @PathVariable Long commentId,
                                                @RequestBody @Validated CommentTextDto commentTextDto) {
@@ -34,7 +32,7 @@ public class PrivateCommentController {
     }
 
     //Удаление комментария пользователем
-    @DeleteMapping("{userId}/comments/{commentId}")
+    @DeleteMapping("/{userId}/comments/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public String deleteCommentPrivate(@PathVariable Long userId, @PathVariable Long commentId) {
         commentService.deleteCommentPrivate(commentId, userId);

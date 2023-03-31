@@ -1,5 +1,6 @@
 package ru.practicum.comment.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -11,15 +12,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/comments")
 @Validated
+@RequiredArgsConstructor
 public class AdminCommentController {
     private final CommentService commentService;
 
-    public AdminCommentController(CommentService commentService) {
-        this.commentService = commentService;
-    }
-
     //Просмотр администратором конкретного комментария
-    @GetMapping("{commentId}")
+    @GetMapping("/{commentId}")
     @ResponseStatus(HttpStatus.OK)
     public CommentDto getCommentAdmin(@PathVariable Long commentId) {
         return commentService.getCommentAdmin(commentId);
@@ -33,7 +31,7 @@ public class AdminCommentController {
     }
 
     //Удаление комментария администратором
-    @DeleteMapping("{commentId}")
+    @DeleteMapping("/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public String deleteCommentAdmin(@PathVariable Long commentId) {
         commentService.deleteCommentAdmin(commentId);

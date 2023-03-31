@@ -1,19 +1,18 @@
 package ru.practicum;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
+
+@RequiredArgsConstructor
 public class Client {
     protected final RestTemplate rest;
 
-    public Client(RestTemplate rest) {
-        this.rest = rest;
-    }
-
-    protected <T> ResponseEntity<Object> post(T body) {
+    protected <T> void post(T body) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
@@ -22,19 +21,21 @@ public class Client {
         try {
             shareitServerResponse = rest.exchange("/hit", HttpMethod.POST, requestEntity, Object.class);
         } catch (HttpStatusCodeException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
+            ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
+            return;
         }
-        return prepareGatewayResponse(shareitServerResponse);
+        prepareGatewayResponse(shareitServerResponse);
     }
 
-    private static ResponseEntity<Object> prepareGatewayResponse(ResponseEntity<Object> response) {
+    private static void prepareGatewayResponse(ResponseEntity<Object> response) {
         if (response.getStatusCode().is2xxSuccessful()) {
-            return response;
+            return;
         }
         ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.status(response.getStatusCode());
         if (response.hasBody()) {
-            return responseBuilder.body(response.getBody());
+            responseBuilder.body(response.getBody());
+            return;
         }
-        return responseBuilder.build();
+        responseBuilder.build();
     }
 }

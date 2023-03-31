@@ -1,5 +1,6 @@
 package ru.practicum.user.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +17,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/users")
 @Validated
+@RequiredArgsConstructor
 public class UserControllerAdmin {
     private final UserService userService;
-
-    public UserControllerAdmin(UserService userService) {
-        this.userService = userService;
-    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -37,7 +35,7 @@ public class UserControllerAdmin {
         return userService.getUsers(ids, PageRequest.of(from / size, size));
     }
 
-    @DeleteMapping("{userId}")
+    @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
         userService.deleteUser(userId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

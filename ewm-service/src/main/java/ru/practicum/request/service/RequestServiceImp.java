@@ -1,5 +1,6 @@
 package ru.practicum.request.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,23 +24,31 @@ import static ru.practicum.request.maper.RequestMapper.requestsListToDtoList;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RequestServiceImp implements RequestService {
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
 
-    public RequestServiceImp(RequestRepository requestRepository,
-                             UserRepository userRepository, EventRepository eventRepository) {
-        this.requestRepository = requestRepository;
-        this.userRepository = userRepository;
-        this.eventRepository = eventRepository;
-    }
-
     @Override
     @Transactional
     public RequestDto createRequest(Long userId, Long eventId) {
-        Event event = checkEvent(eventId);
-        User requester = checkUser(userId);
+        Event event;
+        try {
+            event = eventRepository.findById(eventId)
+                    .orElseThrow(() -> new NotFoundException("Событие с id: " + eventId + " не найдено."));
+        } catch (NotFoundException e) {
+            log.info("Событие с id: {} не найдено.", eventId);
+            throw new NotFoundException(e.getMessage());
+        }
+        User requester;
+        try {
+            requester = userRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
+        } catch (NotFoundException e) {
+            log.info("Пользователь с id: {} не найден.", userId);
+            throw new NotFoundException(e.getMessage());
+        }
         if (!requestRepository.findAllByRequesterIdAndEventId(userId, eventId).isEmpty()) {
             log.info("Запрос с id пользователя: {}, id события: {} уже существует.", userId, eventId);
             throw new ConflictException("Запрос с id пользователя: " + userId + ", id события: "
@@ -66,7 +75,10 @@ public class RequestServiceImp implements RequestService {
     @Override
     @Transactional(readOnly = true)
     public List<RequestDto> getUserRequests(Long userId) {
-        checkUser(userId);
+        if (!userRepository.existsById(userId)) {
+            log.info("Пользователь с id: {} не найден.", userId);
+            throw new NotFoundException("Пользователь с id: " + userId + " не найден.");
+        }
         log.info("Получение запроса пользователя с id: {}", userId);
         return requestsListToDtoList(requestRepository.findAllByRequesterId(userId));
     }
@@ -74,8 +86,18 @@ public class RequestServiceImp implements RequestService {
     @Override
     @Transactional
     public RequestDto canceledRequest(Long userId, Long requestId) {
-        checkUser(userId);
-        Request request = checkRequest(requestId);
+        if (!userRepository.existsById(userId)) {
+            log.info("Пользователь с id: {} не найден.", userId);
+            throw new NotFoundException("Пользователь с id: " + userId + " не найден.");
+        }
+        Request request;
+        try {
+            request = requestRepository.findById(requestId)
+                    .orElseThrow(() -> new NotFoundException("Запрос с id: " + requestId + " не найден"));
+        } catch (NotFoundException e) {
+            log.info("Запрос с id: {} не найден.", requestId);
+            throw new NotFoundException(e.getMessage());
+        }
         Event event = request.getEvent();
         if (request.getStatus().equals(RequestStatus.CONFIRMED.name())) {
             event.setConfirmedRequests(event.getConfirmedRequests() - 1);
@@ -100,36 +122,6 @@ public class RequestServiceImp implements RequestService {
                     "Пользователь id: {} Событие id: {}", userId, event.getId());
             throw new ConflictException("Вы не можете участвовать в неопубликованном мероприятии. " +
                     "Пользователь id: " + userId + " Событие id: " + event.getId());
-        }
-    }
-
-    private User checkUser(Long userId) {
-        try {
-            return userRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
-        } catch (NotFoundException e) {
-            log.info("Пользователь с id: {} не найден.", userId);
-            throw new NotFoundException(e.getMessage());
-        }
-    }
-
-    private Event checkEvent(Long eventId) {
-        try {
-            return eventRepository.findById(eventId)
-                    .orElseThrow(() -> new NotFoundException("Событие с id: " + eventId + " не найдено."));
-        } catch (NotFoundException e) {
-            log.info("Событие с id: {} не найдено.", eventId);
-            throw new NotFoundException(e.getMessage());
-        }
-    }
-
-    private Request checkRequest(Long requestId) {
-        try {
-            return requestRepository.findById(requestId)
-                    .orElseThrow(() -> new NotFoundException("Запрос с id: " + requestId + " не найден"));
-        } catch (NotFoundException e) {
-            log.info("Запрос с id: {} не найден.", requestId);
-            throw new NotFoundException(e.getMessage());
         }
     }
 }

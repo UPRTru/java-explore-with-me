@@ -1,5 +1,6 @@
 package ru.practicum.category.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,19 +18,18 @@ import static ru.practicum.category.mapper.CategoryMapper.*;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class CategoryServiceImp implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final EventRepository eventRepository;
 
-    public CategoryServiceImp(CategoryRepository categories, EventRepository eventRepository) {
-        this.categoryRepository = categories;
-        this.eventRepository = eventRepository;
-    }
-
     @Transactional
     @Override
     public CategoryDto createCategory(CategoryDto categoryDto) {
-        checkName(categoryDto.getName());
+        if (categoryRepository.existsByName(categoryDto.getName())) {
+            log.info("Имя категории уже занято: {}", categoryDto.getName());
+            throw new ConflictException("Имя категории уже занято: " + categoryDto.getName());
+        }
         Category category = dtoToCategory(categoryDto);
         log.info("Добавлена новая категория в базу данных: {}", category);
         return categoryToDto(categoryRepository.save(category));
@@ -38,8 +38,14 @@ public class CategoryServiceImp implements CategoryService {
     @Transactional
     @Override
     public CategoryDto updateCategory(Long categoryId, CategoryDto updateCategory) {
-        checkCategory(categoryId);
-        checkName(updateCategory.getName());
+        if (!categoryRepository.existsById(categoryId)) {
+            log.info("Категория с id: {} не найдена.", categoryId);
+            throw new NotFoundException("Категория с id: " + categoryId + " не найдена.");
+        }
+        if (categoryRepository.existsByName(updateCategory.getName())) {
+            log.info("Имя категории уже занято: {}", updateCategory.getName());
+            throw new ConflictException("Имя категории уже занято: " + updateCategory.getName());
+        }
         Category category = dtoToCategory(updateCategory);
         log.info("Категория обновлена. {}", category);
         return categoryToDto(categoryRepository.save(category));
@@ -48,7 +54,10 @@ public class CategoryServiceImp implements CategoryService {
     @Transactional
     @Override
     public void deleteCategory(Long categoryId) {
-        checkCategory(categoryId);
+        if (!categoryRepository.existsById(categoryId)) {
+            log.info("Категория с id: {} не найдена.", categoryId);
+            throw new NotFoundException("Категория с id: " + categoryId + " не найдена.");
+        }
         if (!eventRepository.findAllByCategoryId(categoryId).isEmpty()) {
             log.info("Категория di: {} не пустая.", categoryId);
             throw new ConflictException("Категория di: " + categoryId + " не пустая.");
@@ -67,25 +76,15 @@ public class CategoryServiceImp implements CategoryService {
     @Transactional(readOnly = true)
     @Override
     public CategoryDto getCategoryById(Long categoryId) {
-        Category category = checkCategory(categoryId);
-        log.info("Получение категории id: {}", categoryId);
-        return categoryToDto(category);
-    }
-
-    private Category checkCategory(Long categoryId) {
+        Category category;
         try {
-            return categoryRepository.findById(categoryId)
+            category = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new NotFoundException("Категория с id: " + categoryId + " не найдена."));
         } catch (NotFoundException e) {
             log.info("Категория с id: {} не найдена.", categoryId);
             throw new NotFoundException(e.getMessage());
         }
-    }
-
-    private void checkName(String name) {
-        if (!categoryRepository.findAllByName(name).isEmpty()) {
-            log.info("Имя категории уже занято: {}", name);
-            throw new ConflictException("Имя категории уже занято: " + name);
-        }
+        log.info("Получение категории id: {}", categoryId);
+        return categoryToDto(category);
     }
 }
