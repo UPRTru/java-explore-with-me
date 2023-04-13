@@ -1,5 +1,6 @@
 package ru.practicum.compilation.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -13,14 +14,11 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/compilations")
 @Validated
+@RequiredArgsConstructor
 public class PublicCompilationController {
     private final CompilationService compilationService;
 
-    public PublicCompilationController(CompilationService compilationService) {
-        this.compilationService = compilationService;
-    }
-
-    @GetMapping("{compId}")
+    @GetMapping("/{compId}")
     @ResponseStatus(HttpStatus.OK)
     public CompilationDto getCompilation(@PathVariable Long compId) {
         return compilationService.getCompilation(compId);

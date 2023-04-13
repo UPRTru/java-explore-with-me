@@ -1,6 +1,7 @@
 package ru.practicum.user.service;
 
 import com.querydsl.core.BooleanBuilder;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,17 +21,14 @@ import static ru.practicum.user.mapper.UserMapper.*;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-
-    public UserServiceImpl(UserRepository usersRepository) {
-        this.userRepository = usersRepository;
-    }
 
     @Transactional
     @Override
     public UserDto createUser(UserDto userDto) {
-        if (!userRepository.findAllByEmail(userDto.getEmail()).isEmpty()) {
+        if (userRepository.existsByEmail(userDto.getEmail())) {
             log.info("Емейл занят. {}", userDto.getEmail());
             throw new ConflictException("Емейл занят. " + userDto.getEmail());
         }

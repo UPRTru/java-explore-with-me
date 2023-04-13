@@ -1,6 +1,7 @@
 package ru.practicum.event.service;
 
 import com.querydsl.core.BooleanBuilder;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +37,7 @@ import static ru.practicum.request.maper.RequestMapper.requestsSetToDtoList;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class EventServiceImp implements EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
@@ -43,25 +45,22 @@ public class EventServiceImp implements EventService {
     private final RequestRepository requestRepository;
     private final StatisticClient statisticClient;
 
-    public EventServiceImp(EventRepository eventRepository, UserRepository userRepository,
-                           CategoryRepository categoryRepository, RequestRepository requestRepository,
-                           StatisticClient statisticClient) {
-        this.eventRepository = eventRepository;
-        this.userRepository = userRepository;
-        this.categoryRepository = categoryRepository;
-        this.requestRepository = requestRepository;
-        this.statisticClient = statisticClient;
-    }
-
     @Override
     @Transactional
     public EventRequestDto addNewEvent(Long userId, NewEventDto newEventDto) {
-        User user = checkUser(userId);
+        User user;
+        try {
+            user =  userRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
+        } catch (NotFoundException e) {
+            log.info("Пользователь с id: {} не найден.", userId);
+            throw new NotFoundException(e.getMessage());
+        }
         if (newEventDto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
             log.info("Дата события должна быть в будущем: {}", newEventDto.getEventDate());
             throw new ConflictException("Дата события должна быть в будущем: " + newEventDto.getEventDate());
         }
-        Category category = checkCategory(newEventDto.getCategory());
+        Category category = getCategory(newEventDto.getCategory());
         Event newEvent = newDtoToEvent(newEventDto, user, category, LocalDateTime.now());
         if (newEvent.getEventDate().isBefore(LocalDateTime.now().minusHours(2))) {
             log.info("Нужно указать дату, которая еще не наступила. {}", newEvent.getEventDate());
@@ -75,7 +74,10 @@ public class EventServiceImp implements EventService {
     @Override
     @Transactional(readOnly = true)
     public Collection<EventShortDto> getPrivateUserEvents(Long userId, Pageable pageable) {
-        checkUser(userId);
+        if (!userRepository.existsById(userId)) {
+            log.info("Пользователь с id: {} не найден.", userId);
+            throw new NotFoundException("Пользователь с id: " + userId + " не найден.");
+        }
         log.info("Получение списка событий пользователя id: {}.", userId);
         return eventsPageToShortDtoCollection(
                 setViews(eventRepository.findAllByInitiatorId(userId, pageable).toList()));
@@ -84,16 +86,22 @@ public class EventServiceImp implements EventService {
     @Override
     @Transactional(readOnly = true)
     public EventDto getPrivateUserEvent(Long userId, Long eventId) {
-        checkUser(userId);
+        if (!userRepository.existsById(userId)) {
+            log.info("Пользователь с id: {} не найден.", userId);
+            throw new NotFoundException("Пользователь с id: " + userId + " не найден.");
+        }
         log.info("Получение события id: {} у пользователя id: {}.", eventId, userId);
-        return eventToDto(setViews(List.of(checkEventEndUserId(eventId, userId))).get(0));
+        return eventToDto(setViews(List.of(getEventEndUserId(eventId, userId))).get(0));
     }
 
     @Override
     @Transactional
     public EventDto updateEventUser(Long userId, Long eventId, UpdateEventRequest updateEventUserRequest) {
-        checkUser(userId);
-        Event event = checkEventEndUserId(eventId, userId);
+        if (!userRepository.existsById(userId)) {
+            log.info("Пользователь с id: {} не найден.", userId);
+            throw new NotFoundException("Пользователь с id: " + userId + " не найден.");
+        }
+        Event event = getEventEndUserId(eventId, userId);
         if (updateEventUserRequest.getEventDate() != null) {
             if (updateEventUserRequest.getEventDate().isBefore(LocalDateTime.now().minusHours(2))) {
                 log.info("Нужно указать дату, которая еще не наступила. {}", updateEventUserRequest.getEventDate());
@@ -112,7 +120,7 @@ public class EventServiceImp implements EventService {
             }
         }
         if (updateEventUserRequest.getCategory() != null) {
-            event.setCategory(checkCategory(updateEventUserRequest.getCategory()));
+            event.setCategory(getCategory(updateEventUserRequest.getCategory()));
         }
         return eventToDto(setViews(List.of(updateEventUserToEvent(updateEventUserRequest, event))).get(0));
     }
@@ -136,7 +144,14 @@ public class EventServiceImp implements EventService {
     @Override
     @Transactional
     public EventDto updateEventAdmin(Long eventId, UpdateEventRequest updateEventAdminRequest) {
-        Event event = checkEvent(eventId);
+        Event event;
+        try {
+            event = eventRepository.findById(eventId)
+                    .orElseThrow(() -> new NotFoundException("Событие с id: " + eventId + " не найдено"));
+        } catch (NotFoundException e) {
+            log.info("Событие с id: {} не найдено", eventId);
+            throw new NotFoundException(e.getMessage());
+        }
         if (updateEventAdminRequest.getEventDate() != null) {
             if (updateEventAdminRequest.getEventDate().isBefore(LocalDateTime.now().minusHours(1))) {
                 log.info("Нужно указать дату, которая еще не наступила. {}", updateEventAdminRequest.getEventDate());
@@ -154,7 +169,7 @@ public class EventServiceImp implements EventService {
             }
         }
         if (updateEventAdminRequest.getCategory() != null) {
-            event.setCategory(checkCategory(updateEventAdminRequest.getCategory()));
+            event.setCategory(getCategory(updateEventAdminRequest.getCategory()));
         }
         return eventToDto(eventRepository.save(updateEventUserToEvent(updateEventAdminRequest, event)));
     }
@@ -162,8 +177,11 @@ public class EventServiceImp implements EventService {
     @Override
     @Transactional(readOnly = true)
     public List<RequestDto> getUserEventRequests(Long userId, Long eventId) {
-        checkUser(userId);
-        Event event = checkEventEndUserId(eventId, userId);
+        if (!userRepository.existsById(userId)) {
+            log.info("Пользователь с id: {} не найден.", userId);
+            throw new NotFoundException("Пользователь с id: " + userId + " не найден.");
+        }
+        Event event = getEventEndUserId(eventId, userId);
         log.info("Получение запроса id пользователа: {}, id события: {}", userId, eventId);
         return requestsSetToDtoList(event.getRequests());
     }
@@ -171,8 +189,11 @@ public class EventServiceImp implements EventService {
     @Override
     @Transactional
     public EventRequestStatusUpdateResult approveRequests(Long userId, Long eventId, EventRequestStatusUpdate requests) {
-        checkUser(userId);
-        Event event = checkEventEndUserId(eventId, userId);
+        if (!userRepository.existsById(userId)) {
+            log.info("Пользователь с id: {} не найден.", userId);
+            throw new NotFoundException("Пользователь с id: " + userId + " не найден.");
+        }
+        Event event = getEventEndUserId(eventId, userId);
         if (event.getParticipantLimit() <= event.getConfirmedRequests()) {
             log.info("Лимит участников достигнут. Событие id: {}", eventId);
             throw new ConflictException("Лимит участников достигнут. Событие id: " + eventId);
@@ -229,17 +250,7 @@ public class EventServiceImp implements EventService {
         return eventsPageToShortDtoCollection(setViews(page.toList()));
     }
 
-    private User checkUser(Long userId) {
-        try {
-            return userRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден."));
-        } catch (NotFoundException e) {
-            log.info("Пользователь с id: {} не найден.", userId);
-            throw new NotFoundException(e.getMessage());
-        }
-    }
-
-    private Event checkEventEndUserId(Long eventId, Long userId) {
+    private Event getEventEndUserId(Long eventId, Long userId) {
         try {
             return eventRepository.findByIdAndInitiatorId(eventId, userId)
                     .orElseThrow(() -> new NotFoundException("Событие с id: " + eventId + " не найдено"));
@@ -249,19 +260,14 @@ public class EventServiceImp implements EventService {
         }
     }
 
-    private Event checkEvent(Long eventId) {
+    private Category getCategory(Long categoryId) {
         try {
-            return eventRepository.findById(eventId)
-                    .orElseThrow(() -> new NotFoundException("Событие с id: " + eventId + " не найдено"));
+            return categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new NotFoundException("Категория с id: " + categoryId + " не найдена"));
         } catch (NotFoundException e) {
-            log.info("Событие с id: {} не найдено", eventId);
+            log.info("Категория с id: {} не найдена", categoryId);
             throw new NotFoundException(e.getMessage());
         }
-    }
-
-    private Category checkCategory(Long categoryId) {
-        return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException("Категория с id: " + categoryId + " не найдена"));
     }
 
     private void moderationRequests(List<RequestDto> confirmedRequests,
@@ -328,7 +334,16 @@ public class EventServiceImp implements EventService {
         }
         Set<Event> resp = new HashSet<>();
         List<StatsDto> statsDtoList;
-        Map<Long, Integer> confRequests = (requestRepository.getConfirmedRequest(eventsId));
+        List<Map<Integer, Map<Long, Integer>>> count = requestRepository.getConfirmedRequestCount(eventsId);
+        Map<Long, Integer> confRequests = new HashMap<>();
+        for (Map<Integer,Map<Long,Integer>> crc : count) {
+            for (Integer innerMapKeys : crc.keySet()) {
+                Map<Long,Integer> innerMap = crc.get(innerMapKeys);
+                Long id = (long) innerMap.get(0L);
+                Integer confirmedRequest = innerMap.get(1L);
+                confRequests.put(id, confirmedRequest);
+            }
+        }
         statsDtoList = statisticClient.getViews(uriEvents.keySet());
         if (statsDtoList == null || statsDtoList.isEmpty()) {
             return events;

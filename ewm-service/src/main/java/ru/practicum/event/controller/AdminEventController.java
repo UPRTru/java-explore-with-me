@@ -1,5 +1,6 @@
 package ru.practicum.event.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -16,12 +17,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/admin/events")
+@RequiredArgsConstructor
 public class AdminEventController {
     private final EventService eventService;
-
-    public AdminEventController(EventService eventService) {
-        this.eventService = eventService;
-    }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -37,7 +35,7 @@ public class AdminEventController {
                 PageRequest.of(from / size, size));
     }
 
-    @PatchMapping("{eventId}")
+    @PatchMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventDto updateEventAdmin(@PathVariable Long eventId, @RequestBody UpdateEventRequest updateEvent) {
         return eventService.updateEventAdmin(eventId, updateEvent);

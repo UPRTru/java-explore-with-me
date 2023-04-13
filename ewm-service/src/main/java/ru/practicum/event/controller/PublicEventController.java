@@ -1,5 +1,6 @@
 package ru.practicum.event.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -21,14 +22,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/events")
 @Validated
+@RequiredArgsConstructor
 public class PublicEventController {
     private final EventService eventService;
 
-    public PublicEventController(EventService eventService) {
-        this.eventService = eventService;
-    }
-
-    @GetMapping("{id}")
+    @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public EventDto getEventById(@PathVariable("id") Long eventId, HttpServletRequest servlet) {
         return eventService.getEventByIdPublic(eventId, servlet);
